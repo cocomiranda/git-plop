@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react'
 import './App.css'
+import { Analytics } from '@vercel/analytics/react'
 
 const today = new Date();
 
@@ -91,69 +92,72 @@ function App() {
   const monthNames = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
 
   return (
-    <div className="poop-app">
-      <h1 className="poop-title">git plop <span role="img" aria-label="poop">💩</span></h1>
-      <div className="poop-main">
-        <div className="poop-chart-container">
-          <div style={{
-            display: 'flex',
-            flexWrap: 'wrap',
-            justifyContent: 'center',
-            gap: '10px',
-            width: '100%',
-            margin: '0 auto',
-          }}>
-            {months.map((monthDays, monthIndex) => (
-              <div key={monthIndex} style={{
-                display: 'grid',
-                gridTemplateColumns: `repeat(7, 1fr)`,
-                gap: 2,
-                width: `calc(7 * 10px + 6 * 2px)`,
-                boxSizing: 'content-box',
-              }}>
-                {monthDays.map((date, i) => {
-                  const filled = date && poopData[formatDate(date)];
-                  return (
-                    <div
-                      key={date ? date.toISOString() : `empty-${monthIndex}-${i}`}
-                      title={date ? date.toDateString() + (filled ? ' 💩' : '') : ''}
-                      style={{
-                        width: 10,
-                        height: 10,
-                        borderRadius: '50%',
-                        background: date ? (filled ? '#4fc3f7' : '#e6eefa') : 'transparent',
-                        border: date ? '1px solid #ccc' : 'none',
-                        margin: 0,
-                        display: 'inline-block',
-                        boxSizing: 'border-box',
-                      }}
-                    />
-                  );
-                })}
-              </div>
-            ))}
+    <>
+      <Analytics />
+      <div className="poop-app">
+        <h1 className="poop-title">git plop <span role="img" aria-label="poop">💩</span></h1>
+        <div className="poop-main">
+          <div className="poop-chart-container">
+            <div style={{
+              display: 'flex',
+              flexWrap: 'wrap',
+              justifyContent: 'center',
+              gap: '10px',
+              width: '100%',
+              margin: '0 auto',
+            }}>
+              {months.map((monthDays, monthIndex) => (
+                <div key={monthIndex} style={{
+                  display: 'grid',
+                  gridTemplateColumns: `repeat(7, 1fr)`,
+                  gap: 2,
+                  width: `calc(7 * 10px + 6 * 2px)`,
+                  boxSizing: 'content-box',
+                }}>
+                  {monthDays.map((date, i) => {
+                    const filled = date && poopData[formatDate(date)];
+                    return (
+                      <div
+                        key={date ? date.toISOString() : `empty-${monthIndex}-${i}`}
+                        title={date ? date.toDateString() + (filled ? ' 💩' : '') : ''}
+                        style={{
+                          width: 10,
+                          height: 10,
+                          borderRadius: '50%',
+                          background: date ? (filled ? '#4fc3f7' : '#e6eefa') : 'transparent',
+                          border: date ? '1px solid #ccc' : 'none',
+                          margin: 0,
+                          display: 'inline-block',
+                          boxSizing: 'border-box',
+                        }}
+                      />
+                    );
+                  })}
+                </div>
+              ))}
+            </div>
+            <div className="poop-chart-footer">
+              <span>{poopCount} <span role="img" aria-label="poop">💩</span> in {today.getFullYear()}</span>
+            </div>
           </div>
-          <div className="poop-chart-footer">
-            <span>{poopCount} <span role="img" aria-label="poop">💩</span> in {today.getFullYear()}</span>
-          </div>
+          {(streak > 0 || poopCount > 1) && (
+            <div className="poop-streak">
+              <span role="img" aria-label="poop" className="poop-emoji">💩</span>
+              <span className="poop-streak-count">{streak}</span>
+              <span>day streak</span>
+            </div>
+          )}
         </div>
-        {(streak > 0 || poopCount > 1) && (
-          <div className="poop-streak">
-            <span role="img" aria-label="poop" className="poop-emoji">💩</span>
-            <span className="poop-streak-count">{streak}</span>
-            <span>day streak</span>
+        <div className="poop-side">
+          <div className="poop-actions">
+            <div className="poop-question">Did you poop today?</div>
+            <button className="poop-btn small" onClick={handlePoop}>Yes</button>
           </div>
-        )}
-      </div>
-      <div className="poop-side">
-        <div className="poop-actions">
-          <div className="poop-question">Did you poop today?</div>
-          <button className="poop-btn small" onClick={handlePoop}>Yes</button>
+          {popup === 'success' && <div className="poop-popup success">Recorded successfully!</div>}
+          {popup === 'already' && <div className="poop-popup already">Already recorded today!</div>}
         </div>
-        {popup === 'success' && <div className="poop-popup success">Recorded successfully!</div>}
-        {popup === 'already' && <div className="poop-popup already">Already recorded today!</div>}
       </div>
-    </div>
+    </>
   );
 }
 
