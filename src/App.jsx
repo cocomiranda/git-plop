@@ -17,13 +17,22 @@ function formatDate(date) {
 }
 
 function getStreak(data) {
-  let streak = 0;
-  for (let i = 0; i < 366; i++) {
-    const date = new Date();
-    date.setDate(date.getDate() - i);
-    date.setHours(0, 0, 0, 0);
-    if (data[formatDate(date)]) {
+  // Find the most recent date with an entry
+  const dates = Object.keys(data).sort().reverse();
+  if (dates.length === 0) return 0;
+
+  let streak = 1;
+  let currentDate = new Date(dates[0]);
+
+  // Count consecutive days backwards from the most recent entry
+  for (let i = 1; i < 366; i++) {
+    const prevDate = new Date(currentDate);
+    prevDate.setDate(currentDate.getDate() - 1);
+    const prevDateStr = formatDate(prevDate);
+    
+    if (data[prevDateStr]) {
       streak++;
+      currentDate = prevDate;
     } else {
       break;
     }
