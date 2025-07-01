@@ -170,9 +170,15 @@ function App() {
         <div className="banana-side" style={{ marginTop: '0.5em', marginBottom: '2em' }}>
           <div className="banana-actions">
             <div className="banana-question">
-              {activity.type === 'eat' && `Did you eat your ${activity.label.toLowerCase()} today?`}
-              {activity.type === 'drink' && `Did you drink your ${activity.label.toLowerCase()} today?`}
-              {activity.type === 'do' && `Did you ${activity.label.toLowerCase()} today?`}
+              {activity.key === 'water' && 'Did you drink 3 liters of water today?'}
+              {activity.key === 'walk' && 'Did you walk 30 minutes today?'}
+              {activity.key === 'vegetables' && 'Did you eat 4 servings of vegetables today?'}
+              {activity.key === 'read' && 'Did you read 15–30 minutes today?'}
+              {activity.key === 'study' && 'Did you study 1 h today?'}
+              {activity.key === 'fruits' && 'Did you eat 3 servings of fruits today?'}
+              {activity.type === 'eat' && activity.key !== 'vegetables' && activity.key !== 'fruits' && `Did you eat your ${activity.label.toLowerCase()} today?`}
+              {activity.type === 'drink' && activity.key !== 'water' && `Did you drink your ${activity.label.toLowerCase()} today?`}
+              {activity.type === 'do' && activity.key !== 'walk' && activity.key !== 'read' && activity.key !== 'study' && `Did you ${activity.label.toLowerCase()} today?`}
               {activity.key === 'quit_smoking' && `Did you stay smoke-free today?`}
               {activity.key === 'quit_alcohol' && `Did you stay alcohol-free today?`}
               {activity.type === 'quit' && activity.key !== 'quit_smoking' && activity.key !== 'quit_alcohol' && `Did you avoid ${activity.label.toLowerCase()} today?`}
