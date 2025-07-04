@@ -162,7 +162,7 @@ function App() {
       </div>
       <div className="banana-app">
         <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', marginBottom: '1em' }}>
-          <h1 className="banana-title" style={{ marginBottom: 0 }}>streaklog <span role="img" aria-label="flame">🔥</span></h1>
+          <h1 className="banana-title" style={{ marginBottom: 0 }}>streakio <span role="img" aria-label="flame">🔥</span></h1>
           <div style={{ fontWeight: 700, fontSize: '2em', marginTop: '0.2em', display: 'flex', alignItems: 'center', gap: '0.3em' }}>
             <span role="img" aria-label={activity.label.toLowerCase()}>{activity.emoji}</span>
           </div>
