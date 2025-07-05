@@ -12,6 +12,7 @@ const ACTIVITIES = [
   { key: 'read', label: 'Read', emoji: '📚', type: 'do' },
   { key: 'yoga', label: 'Yoga', emoji: '🧘‍♂️', type: 'do' },
   { key: 'study', label: 'Study', emoji: '📖', type: 'do' },
+  { key: 'workout', label: 'Workout', emoji: '🏋️', type: 'do' },
   { key: 'quit_smoking', label: 'Quit Smoking', emoji: '🚭', type: 'quit' },
   { key: 'quit_alcohol', label: 'Quit Alcohol', emoji: '🚫🍺', type: 'quit' },
   { key: 'poop', label: 'Poop', emoji: '💩', type: 'do' },
