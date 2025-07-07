@@ -237,6 +237,7 @@
 }
 #stripe-buy-button-container {
   max-width: 320px;
+  zoom: 0.6;
   width: 100%;
   margin: 2.5em auto 0 auto;
 }
