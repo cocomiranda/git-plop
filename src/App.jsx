@@ -283,6 +283,16 @@ function App() {
           )}
         </div>
       </div>
+      {/* Stripe Buy Button Script */}
+      <div style={{ display: 'flex', justifyContent: 'center', margin: '2em 0' }}>
+        <div id="stripe-buy-button-container">
+          <stripe-buy-button
+            buy-button-id="buy_btn_1RiF9SI5sPmv6sLqh2qex3IV"
+            publishable-key="pk_live_51RiF3fI5sPmv6sLqVmkuQ6nECaF1kKgbh3lnxvBdnlAQCpDS1zS8Xp3Ua7U34BGffpRUf4PIK6BuCL9noXHb29Ii00FbWAYdwq"
+          ></stripe-buy-button>
+        </div>
+      </div>
+      <script async src="https://js.stripe.com/v3/buy-button.js"></script>
     </>
   );
 }
