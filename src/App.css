@@ -6,13 +6,6 @@
   text-align: center;
 }
 
-@media (max-width: 500px) {
-  #root {
-    margin-bottom: 20px;
-    padding: 1rem;
-  }
-}
-
 .logo {
   height: 6em;
   padding: 1.5em;
@@ -61,6 +54,7 @@
   box-shadow: 0 2px 16px #0001;
   max-width: 900px;
   margin: 2rem auto;
+  margin-bottom: 100px;
 }
 @media (max-width: 700px) {
   .banana-app {
