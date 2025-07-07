@@ -284,7 +284,7 @@ function App() {
         </div>
       </div>
       {/* Stripe Buy Button Script */}
-      <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '2em' }}>
+      <div style={{ display: 'flex', justifyContent: 'center', margin: '2em 0' }}>
         <div id="stripe-buy-button-container">
           <stripe-buy-button
             buy-button-id="buy_btn_1RiF9SI5sPmv6sLqh2qex3IV"
