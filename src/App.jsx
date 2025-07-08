@@ -13,7 +13,7 @@ const ACTIVITIES = [
   { key: 'yoga', label: 'Yoga', emoji: '🧘‍♂️', type: 'do' },
   { key: 'study', label: 'Study', emoji: '📖', type: 'do' },
   { key: 'workout', label: 'Workout', emoji: '🏋️', type: 'do' },
-  { key: 'build', label: 'Build', emoji: '🧑‍💻', type: 'do', reference: 'vibe coders' },
+  { key: 'code', label: 'Code', emoji: '🧑‍💻', type: 'do', reference: 'vibe coders' },
   { key: 'quit_smoking', label: 'Quit Smoking', emoji: '🚭', type: 'quit' },
   { key: 'quit_alcohol', label: 'Quit Alcohol', emoji: '🚫🍺', type: 'quit' },
   { key: 'poop', label: 'Poop', emoji: '💩', type: 'do' },
@@ -185,7 +185,7 @@ function App() {
               {activity.key === 'quit_alcohol' && 'Did you stay alcohol-free today? Cheers to your health!'}
               {activity.key === 'run' && 'Feel the burn! Did you go for a run today?'}
               {activity.key === 'workout' && 'Strength and sweat! Did you complete your workout today?'}
-              {activity.key === 'build' && 'Did you code today?'}
+              {activity.key === 'code' && 'Did you code today?'}
             </div>
             <button className="banana-btn small" onClick={handleActivity}>Yes</button>
           </div>
@@ -277,7 +277,7 @@ function App() {
                     if (key === 'read') return 'reading';
                     if (key === 'yoga') return 'doing yoga';
                     if (key === 'study') return 'studying';
-                    if (key === 'build') return 'building with vibe coders';
+                    if (key === 'code') return 'building cool stuff';
                     return activity.label.toLowerCase();
                   })()}</span>
                 </>
