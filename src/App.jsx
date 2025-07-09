@@ -178,7 +178,7 @@ function App() {
   return (
     <>
       <Analytics />
-      <h1 className="banana-title" style={{ marginBottom: 0, marginTop: '1.5em' }}>streakio <span role="img" aria-label="flame">🔥</span></h1>
+      <h1 className="banana-title" style={{ marginBottom: 0, marginTop: '0.5em' }}>streakio <span role="img" aria-label="flame">🔥</span></h1>
       <div style={{ display: 'flex', justifyContent: 'center', marginTop: '1.5em', marginBottom: '1em' }}>
         <select
           value={activity.key}
