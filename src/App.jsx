@@ -136,6 +136,7 @@ function App() {
   const [popup, setPopup] = useState(null);
   const [streak, setStreak] = useState(0);
   const [view, setView] = useState('Month');
+  const [animating, setAnimating] = useState(false);
 
   useEffect(() => {
     setStreak(getStreak(activityData));
@@ -144,6 +145,9 @@ function App() {
   useEffect(() => {
     setSelectedActivity(activity);
     setActivityDataState(getActivityData(activity.key));
+    setAnimating(true);
+    const t = setTimeout(() => setAnimating(false), 350);
+    return () => clearTimeout(t);
   }, [activity]);
 
   const handleActivity = () => {
@@ -195,192 +199,198 @@ function App() {
           ))}
         </select>
       </div>
-      <div className="banana-app">
+      <div className={`banana-app banana-dots-fade${animating ? ' animating' : ''}`} key={activity.key + '-app'}>
         <div className="banana-side" style={{ marginTop: '0.5em', marginBottom: '2em' }}>
-          <div className="banana-actions">
-            <div className="banana-question">
-              {activity.key === 'water' && 'Staying hydrated? Did you get those 3 liters in?'}
-              {activity.key === 'walk' && 'Great day for a stroll! Did you get in 30 minutes of walking today?'}
-              {activity.key === 'vegetables' && 'Fueling your body right! Did you enjoy 4 servings of veggies today?'}
-              {activity.key === 'read' && 'Feed your mind—did you take 15–30 minutes to read today?'}
-              {activity.key === 'study' && 'Leveling up! Did you spend 1 hour studying today?'}
-              {activity.key === 'fruits' && 'Sweet and healthy—did you have 3 servings of fruit today?'}
-              {activity.key === 'yoga' && 'Find your zen! Did you do yoga today?'}
-              {activity.key === 'poop' && 'Gut check! Did you poop today?'}
-              {activity.key === 'shower' && 'Fresh and clean! Did you take a shower today?'}
-              {activity.key === 'quit_smoking' && 'Did you stay smoke-free today? Keep those lungs happy!'}
-              {activity.key === 'quit_alcohol' && 'Did you stay alcohol-free today? Cheers to your health!'}
-              {activity.key === 'run' && 'Feel the burn! Did you go for a run today?'}
-              {activity.key === 'workout' && 'Strength and sweat! Did you complete your workout today?'}
-              {activity.key === 'code' && 'Did you code today?'}
+          <div className={`banana-dots-fade${animating ? ' animating' : ''}`} key={activity.key + '-side'}>
+            <div className="banana-actions">
+              <div className="banana-question">
+                {activity.key === 'water' && 'Staying hydrated? Did you get those 3 liters in?'}
+                {activity.key === 'walk' && 'Great day for a stroll! Did you get in 30 minutes of walking today?'}
+                {activity.key === 'vegetables' && 'Fueling your body right! Did you enjoy 4 servings of veggies today?'}
+                {activity.key === 'read' && 'Feed your mind—did you take 15–30 minutes to read today?'}
+                {activity.key === 'study' && 'Leveling up! Did you spend 1 hour studying today?'}
+                {activity.key === 'fruits' && 'Sweet and healthy—did you have 3 servings of fruit today?'}
+                {activity.key === 'yoga' && 'Find your zen! Did you do yoga today?'}
+                {activity.key === 'poop' && 'Gut check! Did you poop today?'}
+                {activity.key === 'shower' && 'Fresh and clean! Did you take a shower today?'}
+                {activity.key === 'quit_smoking' && 'Did you stay smoke-free today? Keep those lungs happy!'}
+                {activity.key === 'quit_alcohol' && 'Did you stay alcohol-free today? Cheers to your health!'}
+                {activity.key === 'run' && 'Feel the burn! Did you go for a run today?'}
+                {activity.key === 'workout' && 'Strength and sweat! Did you complete your workout today?'}
+                {activity.key === 'code' && 'Did you code today?'}
+              </div>
+              <button className="banana-btn small" onClick={handleActivity}>Yes</button>
             </div>
-            <button className="banana-btn small" onClick={handleActivity}>Yes</button>
           </div>
           {popup === 'success' && <div className="banana-popup success">Recorded successfully!</div>}
           {popup === 'already' && <div className="banana-popup already">Already recorded today!</div>}
         </div>
         <div className="banana-main">
           <div className="banana-chart-container">
-            <ViewToggle onChange={setView} />
-            {view === 'Year' && (
-              <div style={{
-                display: 'flex',
-                flexWrap: 'wrap',
-                justifyContent: 'center',
-                gap: '10px',
-                width: '100%',
-                margin: '0 auto',
-              }}>
-                {months.map((monthDays, monthIndex) => (
-                  <div key={monthIndex} style={{
-                    display: 'grid',
-                    gridTemplateColumns: `repeat(7, 1fr)`,
-                    gap: 2,
-                    width: `calc(7 * 10px + 6 * 2px)`,
-                    boxSizing: 'content-box',
-                  }}>
-                    {monthDays.map((date, i) => {
-                      const filled = date && activityData[formatDate(date)];
-                      return (
-                        <div
-                          key={date ? date.toISOString() : `empty-${monthIndex}-${i}`}
-                          title={date ? date.toDateString() + (filled ? ` ${activity.emoji}` : '') : ''}
-                          style={{
-                            width: 10,
-                            height: 10,
-                            borderRadius: '50%',
-                            background: date ? (filled ? '#ffe066' : '#e6eefa') : 'transparent',
-                            border: date ? '1px solid #ccc' : 'none',
-                            margin: 0,
-                            display: 'inline-block',
-                            boxSizing: 'border-box',
-                          }}
-                        />
-                      );
-                    })}
-                  </div>
-                ))}
+            <div className={`banana-dots-fade${animating ? ' animating' : ''}`} key={activity.key}>
+              <ViewToggle onChange={setView} />
+              {view === 'Year' && (
+                <div style={{
+                  display: 'flex',
+                  flexWrap: 'wrap',
+                  justifyContent: 'center',
+                  gap: '10px',
+                  width: '100%',
+                  margin: '0 auto',
+                }}>
+                  {months.map((monthDays, monthIndex) => (
+                    <div key={monthIndex} style={{
+                      display: 'grid',
+                      gridTemplateColumns: `repeat(7, 1fr)`,
+                      gap: 2,
+                      width: `calc(7 * 10px + 6 * 2px)`,
+                      boxSizing: 'content-box',
+                    }}>
+                      {monthDays.map((date, i) => {
+                        const filled = date && activityData[formatDate(date)];
+                        return (
+                          <div
+                            key={date ? date.toISOString() : `empty-${monthIndex}-${i}`}
+                            title={date ? date.toDateString() + (filled ? ` ${activity.emoji}` : '') : ''}
+                            style={{
+                              width: 10,
+                              height: 10,
+                              borderRadius: '50%',
+                              background: date ? (filled ? '#ffe066' : '#e6eefa') : 'transparent',
+                              border: date ? '1px solid #ccc' : 'none',
+                              margin: 0,
+                              display: 'inline-block',
+                              boxSizing: 'border-box',
+                            }}
+                          />
+                        );
+                      })}
+                    </div>
+                  ))}
+                </div>
+              )}
+              {view === 'Month' && (
+                <div style={{
+                  display: 'grid',
+                  gridTemplateColumns: 'repeat(7, 1fr)',
+                  gap: 6,
+                  justifyContent: 'center',
+                  margin: '0 auto',
+                  width: 'fit-content',
+                }}>
+                  {getMonthCalendarData().flat().map((date, i) => {
+                    const filled = date && activityData[formatDate(date)];
+                    return (
+                      <div
+                        key={date ? date.toISOString() : `empty-month-${i}`}
+                        title={date ? date.toDateString() + (filled ? ` ${activity.emoji}` : '') : ''}
+                        style={{
+                          width: 14,
+                          height: 14,
+                          borderRadius: '50%',
+                          background: date ? (filled ? '#ffe066' : '#e6eefa') : 'transparent',
+                          border: date ? '1px solid #ccc' : 'none',
+                          margin: 0,
+                          display: 'inline-block',
+                          boxSizing: 'border-box',
+                        }}
+                      />
+                    );
+                  })}
+                </div>
+              )}
+              {view === 'Week' && (
+                <div style={{
+                  display: 'flex',
+                  gap: 12,
+                  justifyContent: 'center',
+                  margin: '0 auto',
+                  width: 'fit-content',
+                }}>
+                  {getWeekCalendarData().map((date, i) => {
+                    const filled = date && activityData[formatDate(date)];
+                    return (
+                      <div
+                        key={date ? date.toISOString() : `empty-week-${i}`}
+                        title={date ? date.toDateString() + (filled ? ` ${activity.emoji}` : '') : ''}
+                        style={{
+                          width: 16,
+                          height: 16,
+                          borderRadius: '50%',
+                          background: date ? (filled ? '#ffe066' : '#e6eefa') : 'transparent',
+                          border: date ? '1px solid #ccc' : 'none',
+                          margin: 0,
+                          display: 'inline-block',
+                          boxSizing: 'border-box',
+                        }}
+                      />
+                    );
+                  })}
+                </div>
+              )}
+              <div className="banana-chart-footer">
+                <span>
+                  {view === 'Year' && (
+                    <>{activityCount} {activityCount === 1 ? 'log' : 'logs'} this year</>
+                  )}
+                  {view === 'Month' && (
+                    <>{activityCount} {activityCount === 1 ? 'log' : 'logs'} this month</>
+                  )}
+                  {view === 'Week' && (
+                    <>{activityCount} {activityCount === 1 ? 'log' : 'logs'} this week</>
+                  )}
+                </span>
               </div>
-            )}
-            {view === 'Month' && (
-              <div style={{
-                display: 'grid',
-                gridTemplateColumns: 'repeat(7, 1fr)',
-                gap: 6,
-                justifyContent: 'center',
-                margin: '0 auto',
-                width: 'fit-content',
-              }}>
-                {getMonthCalendarData().flat().map((date, i) => {
-                  const filled = date && activityData[formatDate(date)];
-                  return (
-                    <div
-                      key={date ? date.toISOString() : `empty-month-${i}`}
-                      title={date ? date.toDateString() + (filled ? ` ${activity.emoji}` : '') : ''}
-                      style={{
-                        width: 14,
-                        height: 14,
-                        borderRadius: '50%',
-                        background: date ? (filled ? '#ffe066' : '#e6eefa') : 'transparent',
-                        border: date ? '1px solid #ccc' : 'none',
-                        margin: 0,
-                        display: 'inline-block',
-                        boxSizing: 'border-box',
-                      }}
-                    />
-                  );
-                })}
-              </div>
-            )}
-            {view === 'Week' && (
-              <div style={{
-                display: 'flex',
-                gap: 12,
-                justifyContent: 'center',
-                margin: '0 auto',
-                width: 'fit-content',
-              }}>
-                {getWeekCalendarData().map((date, i) => {
-                  const filled = date && activityData[formatDate(date)];
-                  return (
-                    <div
-                      key={date ? date.toISOString() : `empty-week-${i}`}
-                      title={date ? date.toDateString() + (filled ? ` ${activity.emoji}` : '') : ''}
-                      style={{
-                        width: 16,
-                        height: 16,
-                        borderRadius: '50%',
-                        background: date ? (filled ? '#ffe066' : '#e6eefa') : 'transparent',
-                        border: date ? '1px solid #ccc' : 'none',
-                        margin: 0,
-                        display: 'inline-block',
-                        boxSizing: 'border-box',
-                      }}
-                    />
-                  );
-                })}
-              </div>
-            )}
-            <div className="banana-chart-footer">
-              <span>
-                {view === 'Year' && (
-                  <>{activityCount} {activityCount === 1 ? 'log' : 'logs'} this year</>
-                )}
-                {view === 'Month' && (
-                  <>{activityCount} {activityCount === 1 ? 'log' : 'logs'} this month</>
-                )}
-                {view === 'Week' && (
-                  <>{activityCount} {activityCount === 1 ? 'log' : 'logs'} this week</>
-                )}
-              </span>
             </div>
           </div>
           {(streak > 0 || activityCount > 1) && (
-            <div className="banana-streak">
-              {activity.key === 'quit_smoking' && (
-                <>
-                  <span role="img" aria-label="streak">{getFlames(streak)}</span>
-                  <span className="banana-streak-count">{streak}</span>
-                  <span>days streak of being smoke-free</span>
-                </>
-              )}
-              {activity.key === 'quit_alcohol' && (
-                <>
-                  <span role="img" aria-label="streak">{getFlames(streak)}</span>
-                  <span className="banana-streak-count">{streak}</span>
-                  <span>days streak of being alcohol-free</span>
-                </>
-              )}
-              {activity.type === 'eat' && (
-                <>
-                  <span role="img" aria-label="streak">{getFlames(streak)}</span>
-                  <span className="banana-streak-count">{streak}</span>
-                  <span>days streak of eating {activity.label.toLowerCase()}</span>
-                </>
-              )}
-              {activity.type === 'drink' && (
-                <>
-                  <span role="img" aria-label="streak">{getFlames(streak)}</span>
-                  <span className="banana-streak-count">{streak}</span>
-                  <span>days streak of drinking {activity.label.toLowerCase()}</span>
-                </>
-              )}
-              {activity.type === 'do' && (
-                <>
-                  <span role="img" aria-label="streak">{getFlames(streak)}</span>
-                  <span className="banana-streak-count">{streak}</span>
-                  <span>days streak of {(() => {
-                    const key = activity.key;
-                    if (key === 'run') return 'running';
-                    if (key === 'walk') return 'walking';
-                    if (key === 'read') return 'reading';
-                    if (key === 'yoga') return 'doing yoga';
-                    if (key === 'study') return 'studying';
-                    if (key === 'code') return 'building cool stuff';
-                    return activity.label.toLowerCase();
-                  })()}</span>
-                </>
-              )}
+            <div className={`banana-dots-fade${animating ? ' animating' : ''}`} key={activity.key + '-streak'}>
+              <div className="banana-streak">
+                {activity.key === 'quit_smoking' && (
+                  <>
+                    <span role="img" aria-label="streak">{getFlames(streak)}</span>
+                    <span className="banana-streak-count">{streak}</span>
+                    <span>days streak of being smoke-free</span>
+                  </>
+                )}
+                {activity.key === 'quit_alcohol' && (
+                  <>
+                    <span role="img" aria-label="streak">{getFlames(streak)}</span>
+                    <span className="banana-streak-count">{streak}</span>
+                    <span>days streak of being alcohol-free</span>
+                  </>
+                )}
+                {activity.type === 'eat' && (
+                  <>
+                    <span role="img" aria-label="streak">{getFlames(streak)}</span>
+                    <span className="banana-streak-count">{streak}</span>
+                    <span>days streak of eating {activity.label.toLowerCase()}</span>
+                  </>
+                )}
+                {activity.type === 'drink' && (
+                  <>
+                    <span role="img" aria-label="streak">{getFlames(streak)}</span>
+                    <span className="banana-streak-count">{streak}</span>
+                    <span>days streak of drinking {activity.label.toLowerCase()}</span>
+                  </>
+                )}
+                {activity.type === 'do' && (
+                  <>
+                    <span role="img" aria-label="streak">{getFlames(streak)}</span>
+                    <span className="banana-streak-count">{streak}</span>
+                    <span>days streak of {(() => {
+                      const key = activity.key;
+                      if (key === 'run') return 'running';
+                      if (key === 'walk') return 'walking';
+                      if (key === 'read') return 'reading';
+                      if (key === 'yoga') return 'doing yoga';
+                      if (key === 'study') return 'studying';
+                      if (key === 'code') return 'building cool stuff';
+                      return activity.label.toLowerCase();
+                    })()}</span>
+                  </>
+                )}
+              </div>
             </div>
           )}
         </div>

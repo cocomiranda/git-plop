@@ -243,4 +243,11 @@
   width: 100%;
   /* margin: 0.1em auto 0 auto; */
 }
+.banana-dots-fade {
+  transition: opacity 0.35s cubic-bezier(0.4, 0, 0.2, 1);
+  opacity: 1;
+}
+.banana-dots-fade.animating {
+  opacity: 0;
+}
 
