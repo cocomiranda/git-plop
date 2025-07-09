@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
 import './App.css'
 import { Analytics } from '@vercel/analytics/react'
+import ViewToggle from './ViewToggle';
 
 const today = new Date();
 
@@ -91,6 +92,36 @@ function getYearCalendarData() {
   return months;
 }
 
+function getMonthCalendarData() {
+  // Returns a 5x7 grid for the current month
+  const now = new Date();
+  const year = now.getFullYear();
+  const month = now.getMonth();
+  const firstDay = new Date(year, month, 1);
+  const lastDay = new Date(year, month + 1, 0);
+  const days = [];
+  let emptyDays = firstDay.getDay() === 0 ? 6 : firstDay.getDay() - 1;
+  for (let i = 0; i < emptyDays; i++) days.push(null);
+  for (let d = 1; d <= lastDay.getDate(); d++) days.push(new Date(year, month, d));
+  // Pad to 5x7 (35 days)
+  while (days.length < 35) days.push(null);
+  // Split into 5 weeks
+  return Array.from({ length: 5 }, (_, i) => days.slice(i * 7, i * 7 + 7));
+}
+
+function getWeekCalendarData() {
+  // Returns an array of 7 days for the current week (Mon-Sun)
+  const now = new Date();
+  const dayOfWeek = now.getDay() === 0 ? 6 : now.getDay() - 1;
+  const week = [];
+  for (let i = 0; i < 7; i++) {
+    const d = new Date(now);
+    d.setDate(now.getDate() - dayOfWeek + i);
+    week.push(d);
+  }
+  return week;
+}
+
 // Returns 1, 2, or 3 flames based on the streak length
 function getFlames(streak) {
   if (streak >= 30) return '🔥🔥🔥';
@@ -104,6 +135,7 @@ function App() {
   const [activityData, setActivityDataState] = useState(getActivityData(getSelectedActivity().key));
   const [popup, setPopup] = useState(null);
   const [streak, setStreak] = useState(0);
+  const [view, setView] = useState('Month');
 
   useEffect(() => {
     setStreak(getStreak(activityData));
@@ -194,46 +226,118 @@ function App() {
         </div>
         <div className="banana-main">
           <div className="banana-chart-container">
-            <div style={{
-              display: 'flex',
-              flexWrap: 'wrap',
-              justifyContent: 'center',
-              gap: '10px',
-              width: '100%',
-              margin: '0 auto',
-            }}>
-              {months.map((monthDays, monthIndex) => (
-                <div key={monthIndex} style={{
-                  display: 'grid',
-                  gridTemplateColumns: `repeat(7, 1fr)`,
-                  gap: 2,
-                  width: `calc(7 * 10px + 6 * 2px)`,
-                  boxSizing: 'content-box',
-                }}>
-                  {monthDays.map((date, i) => {
-                    const filled = date && activityData[formatDate(date)];
-                    return (
-                      <div
-                        key={date ? date.toISOString() : `empty-${monthIndex}-${i}`}
-                        title={date ? date.toDateString() + (filled ? ` ${activity.emoji}` : '') : ''}
-                        style={{
-                          width: 10,
-                          height: 10,
-                          borderRadius: '50%',
-                          background: date ? (filled ? '#ffe066' : '#e6eefa') : 'transparent',
-                          border: date ? '1px solid #ccc' : 'none',
-                          margin: 0,
-                          display: 'inline-block',
-                          boxSizing: 'border-box',
-                        }}
-                      />
-                    );
-                  })}
-                </div>
-              ))}
-            </div>
+            <ViewToggle onChange={setView} />
+            {view === 'Year' && (
+              <div style={{
+                display: 'flex',
+                flexWrap: 'wrap',
+                justifyContent: 'center',
+                gap: '10px',
+                width: '100%',
+                margin: '0 auto',
+              }}>
+                {months.map((monthDays, monthIndex) => (
+                  <div key={monthIndex} style={{
+                    display: 'grid',
+                    gridTemplateColumns: `repeat(7, 1fr)`,
+                    gap: 2,
+                    width: `calc(7 * 10px + 6 * 2px)`,
+                    boxSizing: 'content-box',
+                  }}>
+                    {monthDays.map((date, i) => {
+                      const filled = date && activityData[formatDate(date)];
+                      return (
+                        <div
+                          key={date ? date.toISOString() : `empty-${monthIndex}-${i}`}
+                          title={date ? date.toDateString() + (filled ? ` ${activity.emoji}` : '') : ''}
+                          style={{
+                            width: 10,
+                            height: 10,
+                            borderRadius: '50%',
+                            background: date ? (filled ? '#ffe066' : '#e6eefa') : 'transparent',
+                            border: date ? '1px solid #ccc' : 'none',
+                            margin: 0,
+                            display: 'inline-block',
+                            boxSizing: 'border-box',
+                          }}
+                        />
+                      );
+                    })}
+                  </div>
+                ))}
+              </div>
+            )}
+            {view === 'Month' && (
+              <div style={{
+                display: 'grid',
+                gridTemplateColumns: 'repeat(7, 1fr)',
+                gap: 6,
+                justifyContent: 'center',
+                margin: '0 auto',
+                width: 'fit-content',
+              }}>
+                {getMonthCalendarData().flat().map((date, i) => {
+                  const filled = date && activityData[formatDate(date)];
+                  return (
+                    <div
+                      key={date ? date.toISOString() : `empty-month-${i}`}
+                      title={date ? date.toDateString() + (filled ? ` ${activity.emoji}` : '') : ''}
+                      style={{
+                        width: 14,
+                        height: 14,
+                        borderRadius: '50%',
+                        background: date ? (filled ? '#ffe066' : '#e6eefa') : 'transparent',
+                        border: date ? '1px solid #ccc' : 'none',
+                        margin: 0,
+                        display: 'inline-block',
+                        boxSizing: 'border-box',
+                      }}
+                    />
+                  );
+                })}
+              </div>
+            )}
+            {view === 'Week' && (
+              <div style={{
+                display: 'flex',
+                gap: 12,
+                justifyContent: 'center',
+                margin: '0 auto',
+                width: 'fit-content',
+              }}>
+                {getWeekCalendarData().map((date, i) => {
+                  const filled = date && activityData[formatDate(date)];
+                  return (
+                    <div
+                      key={date ? date.toISOString() : `empty-week-${i}`}
+                      title={date ? date.toDateString() + (filled ? ` ${activity.emoji}` : '') : ''}
+                      style={{
+                        width: 16,
+                        height: 16,
+                        borderRadius: '50%',
+                        background: date ? (filled ? '#ffe066' : '#e6eefa') : 'transparent',
+                        border: date ? '1px solid #ccc' : 'none',
+                        margin: 0,
+                        display: 'inline-block',
+                        boxSizing: 'border-box',
+                      }}
+                    />
+                  );
+                })}
+              </div>
+            )}
             <div className="banana-chart-footer">
-              <span>{activityCount} {activityCount === 1 ? 'log' : 'logs'} this year</span>
+              <span>
+                {view === 'Year' && (
+                  <>{activityCount} {activityCount === 1 ? 'log' : 'logs'} this year</>
+                )}
+                {view === 'Month' && (
+                  <>{activityCount} {activityCount === 1 ? 'log' : 'logs'} this month</>
+                )}
+                {view === 'Week' && (
+                  <>{activityCount} {activityCount === 1 ? 'log' : 'logs'} this week</>
+                )}
+              </span>
             </div>
           </div>
           {(streak > 0 || activityCount > 1) && (
