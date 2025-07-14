@@ -523,17 +523,24 @@ When the menu is open, hide the gear button. */}
             {/* List activities with delete buttons */}
             <div className="activity-list" style={{ display: 'flex', flexDirection: 'column', gap: 6, marginTop: 8, justifyContent: 'center' }}>
               {activities.map(a => (
-                <div key={a.key} className="activity-item" style={{ display: 'flex', alignItems: 'center', gap: 8, background: '#f6faff', borderRadius: 6, padding: '4px 10px' }}>
-                  <span style={{ fontSize: '1.1em' }}>{a.emoji}</span>
-                  <span style={{ margin: '0 4px', fontSize: '0.98em', flex: 1 }}>{a.label}</span>
+                <div key={a.key} className="activity-item" style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'space-between', // ensures delete button stays right
+                  background: '#f6faff',
+                  borderRadius: 6,
+                  padding: '4px 10px',
+                  minWidth: 0, // prevents overflow
+                  gap: 8,
+                }}>
+                  <span style={{ fontSize: '1.1em', flexShrink: 0 }}>{a.emoji}</span>
+                  <span style={{ margin: '0 4px', fontSize: '0.98em', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', flexGrow: 1 }}>{a.label}</span>
                   <button
                     className="banana-btn small"
                     style={{
                       background: '#eee',
                       color: '#bbb',
-                      padding: '1px 1px',
-                      width: 30,
-                      height: 20,
+                      padding: '1px 5px',
                       fontSize: 14,
                       marginLeft: 0,
                       lineHeight: 1,
@@ -543,6 +550,7 @@ When the menu is open, hide the gear button. */}
                       display: 'flex',
                       alignItems: 'center',
                       justifyContent: 'center',
+                      flexShrink: 0,
                     }}
                     title="Delete activity"
                     onClick={() => handleDeleteActivity(a.key)}

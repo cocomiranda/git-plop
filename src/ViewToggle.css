@@ -27,6 +27,7 @@
 
 .view-toggle.small {
   gap: 6px;
+  justify-content: center;
 }
 
 .view-toggle.small button {
