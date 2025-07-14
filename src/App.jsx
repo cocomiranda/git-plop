@@ -533,6 +533,7 @@ When the menu is open, hide the gear button. */}
                       color: '#bbb',
                       padding: '1px 1px',
                       width: 30,
+                      height: 20,
                       fontSize: 14,
                       marginLeft: 0,
                       lineHeight: 1,
