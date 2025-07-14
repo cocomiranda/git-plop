@@ -5,25 +5,34 @@ import ViewToggle from './ViewToggle';
 
 const today = new Date();
 
-const ACTIVITIES = [
-  { key: 'water', label: 'Water', emoji: '💧', type: 'drink' },
-  { key: 'walk', label: 'Walk', emoji: '🚶', type: 'do' },
-  { key: 'vegetables', label: 'Vegetables', emoji: '🥦🥕🥒', type: 'eat' },
-  { key: 'run', label: 'Run', emoji: '🏃', type: 'do' },
-  { key: 'read', label: 'Read', emoji: '📚', type: 'do' },
-  { key: 'yoga', label: 'Yoga', emoji: '🧘‍♂️', type: 'do' },
-  { key: 'study', label: 'Study', emoji: '📖', type: 'do' },
-  { key: 'workout', label: 'Workout', emoji: '🏋️', type: 'do' },
-  { key: 'code', label: 'Code', emoji: '🧑‍💻', type: 'do', reference: 'vibe coders' },
-  { key: 'quit_smoking', label: 'Quit Smoking', emoji: '🚭', type: 'quit' },
-  { key: 'quit_alcohol', label: 'Quit Alcohol', emoji: '🚫🍺', type: 'quit' },
-  { key: 'poop', label: 'Poop', emoji: '💩', type: 'do' },
-  { key: 'shower', label: 'Shower', emoji: '🚿', type: 'do' },
-  { key: 'fruits', label: 'Fruits', emoji: '🍌🍎🍊', type: 'eat' },
-];
+function getStoredActivities() {
+  const stored = localStorage.getItem('activities');
+  if (stored) return JSON.parse(stored);
+  // Default activities if none stored
+  return [
+    { key: 'water', label: 'Water', emoji: '💧', type: 'drink' },
+    { key: 'walk', label: 'Walk', emoji: '🚶', type: 'do' },
+    { key: 'vegetables', label: 'Vegetables', emoji: '🥦🥕🥒', type: 'eat' },
+    { key: 'run', label: 'Run', emoji: '🏃', type: 'do' },
+    { key: 'read', label: 'Read', emoji: '📚', type: 'do' },
+    { key: 'yoga', label: 'Yoga', emoji: '🧘‍♂️', type: 'do' },
+    { key: 'study', label: 'Study', emoji: '📖', type: 'do' },
+    { key: 'workout', label: 'Workout', emoji: '🏋️', type: 'do' },
+    { key: 'code', label: 'Code', emoji: '🧑‍💻', type: 'do', reference: 'vibe coders' },
+    { key: 'quit_smoking', label: 'Quit Smoking', emoji: '🚭', type: 'quit' },
+    { key: 'quit_alcohol', label: 'Quit Alcohol', emoji: '🚫🍺', type: 'quit' },
+    { key: 'poop', label: 'Poop', emoji: '💩', type: 'do' },
+    { key: 'shower', label: 'Shower', emoji: '🚿', type: 'do' },
+    { key: 'fruits', label: 'Fruits', emoji: '🍌🍎🍊', type: 'eat' },
+  ];
+}
+
+function saveActivities(activities) {
+  localStorage.setItem('activities', JSON.stringify(activities));
+}
 
 function getSelectedActivity() {
-  return JSON.parse(localStorage.getItem('selectedActivity')) || ACTIVITIES[0];
+  return JSON.parse(localStorage.getItem('selectedActivity')) || getStoredActivities()[0];
 }
 
 function setSelectedActivity(activity) {
@@ -130,13 +139,133 @@ function getFlames(streak) {
   return '';
 }
 
+// Add a function to get a question for an activity
+function getActivityQuestion(label) {
+  const l = label.toLowerCase().trim().replace(/\s+/g, ' ');
+  if (l.includes('no social media')) return 'Digital detox! Did you stay off social media today?';
+  if (l.includes('soccer') || l.includes('football') || l.includes('futbol') || l.includes('footbal')) return 'Goal time! Did you kick the ball around today?';
+  if (l.includes('basketball')) return 'Swish! Did you shoot some hoops today?';
+  if (l.includes('jump rope') || l.includes('jump')) return 'Bounce to it! Did you jump rope today?';
+  if (l.includes('pushup')) return 'Push it! Did you do your pushups today?';
+  if (l.includes('situp')) return 'Core power! Did you do your situps today?';
+  if (l.includes('stretch')) return 'Stay limber! Did you stretch today?';
+  if (l.includes('language')) return 'Polyglot in progress! Did you practice a new language today?';
+  if (l.includes('board game') || l.includes('board')) return 'Game night! Did you play a board game today?';
+  if (l.includes('puzzle')) return 'Brain boost! Did you solve a puzzle today?';
+  if (l.includes('game')) return 'Level up! Did you play a game today?';
+  if (l.includes('tv')) return 'Chill time! Did you watch your favorite show today?';
+  if (l.includes('movie')) return 'Movie magic! Did you watch a film today?';
+  if (l.includes('garden')) return 'Green thumb! Did you tend to your garden today?';
+  if (l.includes('fishing') || l.includes('fish')) return 'Gone fishing! Did you cast a line today?';
+  if (l.includes('lake')) return 'Lake day! Did you visit a lake today?';
+  if (l.includes('mountain')) return 'Peak performance! Did you enjoy the mountains today?';
+  if (l.includes('beach')) return 'Beach vibes! Did you hit the beach today?';
+  if (l.includes('picnic')) return 'Picnic party! Did you enjoy a meal outdoors today?';
+  if (l.includes('camp')) return 'Campfire stories! Did you go camping today?';
+  if (l.includes('hike')) return 'Trailblazer! Did you go hiking today?';
+  if (l.includes('park')) return 'Fresh air! Did you visit a park today?';
+  if (l.includes('bus') || l.includes('transit')) return 'On the move! Did you use public transit today?';
+  if (l.includes('drive')) return 'Road trip! Did you drive today?';
+  if (l.includes('travel')) return 'Adventure awaits! Did you travel today?';
+  if (l.includes('plan')) return 'Organized and ready! Did you plan your day?';
+  if (l.includes('email')) return 'Inbox zero? Did you check your email today?';
+  if (l.includes('meeting')) return 'Teamwork! Did you have a meeting today?';
+  if (l.includes('work')) return 'Hustle mode! Did you work today?';
+  if (l.includes('volunteer')) return 'Giving back! Did you volunteer today?';
+  if (l.includes('donate')) return 'Spread the love! Did you donate today?';
+  if (l.includes('invest')) return 'Future focused! Did you invest today?';
+  if (l.includes('budget')) return 'Money matters! Did you review your budget today?';
+  if (l.includes('save') || l.includes('money')) return 'Cha-ching! Did you save money today?';
+  if (l.includes('call')) return 'Stay connected! Did you call someone today?';
+  if (l.includes('text')) return 'Ping! Did you text a friend today?';
+  if (l.includes('family')) return 'Family first! Did you connect with your family today?';
+  if (l.includes('photo')) return 'Say cheese! Did you snap a photo today?';
+  if (l.includes('video')) return 'Lights, camera, action! Did you record a video today?';
+  if (l.includes('blog')) return 'Share your story! Did you write a blog post today?';
+  if (l.includes('write')) return 'Pen to paper! Did you write today?';
+  if (l.includes('paint')) return 'Color your world! Did you paint today?';
+  if (l.includes('draw')) return 'Sketch it out! Did you draw today?';
+  if (l.includes('sing')) return 'Sing your heart out! Did you sing today?';
+  if (l.includes('dance')) return 'Bust a move! Did you dance today?';
+  if (l.includes('music') || l.includes('instrument') || l.includes('guitar') || l.includes('piano') || l.includes('violin')) return 'Feel the rhythm! Did you play music or practice an instrument today?';
+  if (l.includes('bird')) return 'Feathered friends! Did you care for your bird today?';
+  if (l.includes('cat')) return 'Purr-fect! Did you care for your cat today?';
+  if (l.includes('dog')) return 'Pawsitive vibes! Did you care for your dog today?';
+  if (l.includes('pet')) return 'Pet love! Did you care for your pet today?';
+  if (l.includes('plant')) return 'Leafy greens! Did you water your plants today?';
+  if (l.includes('bake')) return 'Sweet treats! Did you bake today?';
+  if (l.includes('cook')) return 'Master chef! Did you cook today?';
+  if (l.includes('grocery') || l.includes('shopping')) return 'Stocked up! Did you go grocery shopping today?';
+  if (l.includes('trash')) return 'Clean sweep! Did you take out the trash today?';
+  if (l.includes('dish')) return 'Sparkling clean! Did you do the dishes today?';
+  if (l.includes('laundry')) return 'Fresh threads! Did you do laundry today?';
+  if (l.includes('clean')) return 'Tidy up! Did you clean today?';
+  if (l.includes('nail')) return 'Nailed it! Did you care for your nails today?';
+  if (l.includes('haircut')) return 'New look! Did you get a haircut today?';
+  if (l.includes('skincare')) return 'Glow up! Did you do skincare today?';
+  if (l.includes('vitamin')) return 'Boost mode! Did you take your vitamins today?';
+  if (l.includes('medicine') || l.includes('pill')) return 'Health first! Did you take your medicine today?';
+  if (l.includes('doctor')) return 'Checkup time! Did you visit the doctor today?';
+  if (l.includes('dentist')) return 'Smile bright! Did you visit the dentist today?';
+  if (l.includes('floss')) return 'Floss boss! Did you floss today?';
+  if (l.includes('brush')) return 'Shiny smile! Did you brush your teeth today?';
+  if (l.includes('snack')) return 'Snack attack! Did you have a snack today?';
+  if (l.includes('dinner')) return 'Dinner time! Did you have dinner today?';
+  if (l.includes('lunch')) return 'Lunch break! Did you have lunch today?';
+  if (l.includes('breakfast')) return 'Rise and shine! Did you have breakfast today?';
+  if (l.includes('gratitude')) return 'Grateful heart! Did you practice gratitude today?';
+  if (l.includes('journal')) return 'Dear diary... Did you write in your journal today?';
+  if (l.includes('sun')) return 'Sunny days! Did you get some sun today?';
+  if (l.includes('swim')) return 'Splash zone! Did you swim today?';
+  if (l.includes('bike') || l.includes('cycle')) return 'Pedal power! Did you bike today?';
+  if (l.includes('tea')) return 'Tea time! Did you drink tea today?';
+  if (l.includes('coffee')) return 'Caffeine fix! Did you drink coffee today?';
+  if (l.includes('meditate')) return 'Zen mode! Did you meditate today?';
+  if (l.includes('sleep')) return 'Sweet dreams! Did you sleep well today?';
+  if (l.includes('shower') || l.includes('bath')) return 'Fresh and clean! Did you shower or bathe today?';
+  if (l.includes('poop') || l.includes('toilet')) return 'Gut check! Did you poop today?';
+  if (l.includes('alcohol') || l.includes('beer')) return 'Cheers to health! Did you avoid alcohol today?';
+  if (l.includes('smok')) return 'Breathe easy! Did you avoid smoking today?';
+  if (l.includes('code') || l.includes('program')) return 'Builder vibes! Did you code today?';
+  if (l.includes('workout') || l.includes('exercise')) return 'Strength and sweat! Did you work out today?';
+  if (l.includes('study')) return 'Level up! Did you study today?';
+  if (l.includes('yoga')) return 'Find your zen! Did you do yoga today?';
+  if (l.includes('read')) return 'Feed your mind! Did you read today?';
+  if (l.includes('run')) return 'Feel the burn! Did you run today?';
+  if (l.includes('fruit')) return 'Sweet and healthy! Did you eat fruit today?';
+  if (l.includes('vegetable') || l.includes('veggie')) return 'Fuel your body! Did you eat vegetables today?';
+  if (l.includes('walk')) return 'Great day for a stroll! Did you walk today?';
+  if (l.includes('water') || l.includes('drink')) return 'Staying hydrated? Did you drink enough water today?';
+  // fallback
+  return 'Did you do this activity today?';
+}
+
 function App() {
-  const [activity, setActivity] = useState(getSelectedActivity());
+  const [activities, setActivities] = useState(getStoredActivities());
+  const [activity, setActivity] = useState(() => {
+    const stored = localStorage.getItem('selectedActivity');
+    if (stored) {
+      const selected = JSON.parse(stored);
+      // If the selected activity is not in the list, fallback to first
+      return getStoredActivities().find(a => a.key === selected.key) || getStoredActivities()[0];
+    }
+    return getStoredActivities()[0];
+  });
   const [activityData, setActivityDataState] = useState(getActivityData(getSelectedActivity().key));
   const [popup, setPopup] = useState(null);
   const [streak, setStreak] = useState(0);
   const [view, setView] = useState('Month');
   const [animating, setAnimating] = useState(false);
+  const [showAddForm, setShowAddForm] = useState(false);
+  const [newLabel, setNewLabel] = useState('');
+  const [newEmoji, setNewEmoji] = useState(''); // will be auto-set
+  const [addError, setAddError] = useState('');
+  const [showManage, setShowManage] = useState(false);
+
+  // Update activities in localStorage whenever they change
+  useEffect(() => {
+    saveActivities(activities);
+  }, [activities]);
 
   useEffect(() => {
     setStreak(getStreak(activityData));
@@ -175,6 +304,148 @@ function App() {
     }
   }, [popup]);
 
+  // Add a new activity
+  const handleAddActivity = (e) => {
+    e.preventDefault();
+    setAddError('');
+    const label = newLabel.trim();
+    const emoji = newEmoji.trim();
+    if (!label) {
+      setAddError('Please enter a label.');
+      return;
+    }
+    // Generate a unique key
+    const key = label.toLowerCase().replace(/\s+/g, '_');
+    if (activities.some(a => a.key === key)) {
+      setAddError('Activity with this label already exists.');
+      return;
+    }
+    const newActivity = { key, label, emoji };
+    setActivities([...activities, newActivity]);
+    setNewLabel('');
+    setNewEmoji('');
+    setShowManage(false);
+    setActivity(newActivity);
+  };
+
+  // Delete an activity and its data
+  const handleDeleteActivity = (key) => {
+    if (!window.confirm('Delete this activity and all its data?')) return;
+    setActivities(activities.filter(a => a.key !== key));
+    localStorage.removeItem(`${key}Data`);
+    // If the deleted activity is selected, switch to first remaining
+    if (activity.key === key) {
+      const next = activities.find(a => a.key !== key) || activities[0];
+      setActivity(next);
+    }
+  };
+
+  // Emoji prediction function
+  function predictEmoji(label) {
+    const l = label.toLowerCase().trim().replace(/\s+/g, ' ');
+    if (l.includes('no social media') || l.includes('no facebook') || l.includes('no instagram') || l.includes('no twitter')) return '🚫📱';
+    if (l.includes('soccer') || l.includes('football') || l.includes('futbol') || l.includes('footbal')) return '⚽';
+    if (l.includes('basketball')) return '🏀';
+    if (l.includes('jump rope') || l.includes('jump')) return '🤾';
+    if (l.includes('pushup')) return '🏋️';
+    if (l.includes('situp')) return '🏋️‍♂️';
+    if (l.includes('stretch')) return '🤸';
+    if (l.includes('language')) return '🈳';
+    if (l.includes('board game') || l.includes('board')) return '🎲';
+    if (l.includes('puzzle')) return '🧩';
+    if (l.includes('game')) return '🎮';
+    if (l.includes('tv')) return '📺';
+    if (l.includes('movie')) return '🎬';
+    if (l.includes('garden')) return '🌱';
+    if (l.includes('fishing') || l.includes('fish')) return '🎣';
+    if (l.includes('lake')) return '🏞️';
+    if (l.includes('mountain')) return '🏔️';
+    if (l.includes('beach')) return '🏖️';
+    if (l.includes('picnic')) return '🧺';
+    if (l.includes('camp')) return '⛺';
+    if (l.includes('hike')) return '🥾';
+    if (l.includes('park')) return '🌳';
+    if (l.includes('bus') || l.includes('transit')) return '🚌';
+    if (l.includes('drive')) return '🚗';
+    if (l.includes('travel')) return '✈️';
+    if (l.includes('plan')) return '🗓️';
+    if (l.includes('email')) return '📧';
+    if (l.includes('meeting')) return '👔';
+    if (l.includes('work')) return '💼';
+    if (l.includes('volunteer')) return '🤝';
+    if (l.includes('donate')) return '💸';
+    if (l.includes('invest')) return '📈';
+    if (l.includes('budget')) return '📊';
+    if (l.includes('save') || l.includes('money')) return '💰';
+    if (l.includes('call')) return '📞';
+    if (l.includes('text')) return '💬';
+    if (l.includes('family')) return '👨‍👩‍👧‍👦';
+    if (l.includes('photo')) return '📷';
+    if (l.includes('video')) return '🎥';
+    if (l.includes('blog')) return '📝';
+    if (l.includes('write')) return '✍️';
+    if (l.includes('paint')) return '🖌️';
+    if (l.includes('draw')) return '🎨';
+    if (l.includes('sing')) return '🎤';
+    if (l.includes('dance')) return '💃';
+    if (l.includes('music') || l.includes('instrument') || l.includes('guitar') || l.includes('piano') || l.includes('violin')) return '🎸';
+    if (l.includes('bird')) return '🐦';
+    if (l.includes('cat')) return '🐈';
+    if (l.includes('dog')) return '🐕';
+    if (l.includes('pet')) return '🐶';
+    if (l.includes('plant')) return '🪴';
+    if (l.includes('bake')) return '🧁';
+    if (l.includes('cook')) return '🍳';
+    if (l.includes('grocery') || l.includes('shopping')) return '🛒';
+    if (l.includes('trash')) return '🗑️';
+    if (l.includes('dish')) return '🍽️';
+    if (l.includes('laundry')) return '🧺';
+    if (l.includes('clean')) return '🧹';
+    if (l.includes('nail')) return '💅';
+    if (l.includes('haircut')) return '💇';
+    if (l.includes('skincare')) return '🧴';
+    if (l.includes('vitamin')) return '🧴';
+    if (l.includes('medicine') || l.includes('pill')) return '💊';
+    if (l.includes('doctor')) return '🩺';
+    if (l.includes('dentist')) return '🦷';
+    if (l.includes('floss')) return '🦷';
+    if (l.includes('brush')) return '🪥';
+    if (l.includes('snack')) return '🍪';
+    if (l.includes('dinner')) return '🍽️';
+    if (l.includes('lunch')) return '🍱';
+    if (l.includes('breakfast')) return '🥣';
+    if (l.includes('gratitude')) return '🙏';
+    if (l.includes('journal')) return '📓';
+    if (l.includes('sun')) return '☀️';
+    if (l.includes('swim')) return '🏊';
+    if (l.includes('bike') || l.includes('cycle')) return '🚴';
+    if (l.includes('tea')) return '🍵';
+    if (l.includes('coffee')) return '☕';
+    if (l.includes('meditate')) return '🧘';
+    if (l.includes('sleep')) return '😴';
+    if (l.includes('shower') || l.includes('bath')) return '🚿';
+    if (l.includes('poop') || l.includes('toilet')) return '💩';
+    if (l.includes('alcohol') || l.includes('beer')) return '🚫🍺';
+    if (l.includes('smok')) return '🚭';
+    if (l.includes('code') || l.includes('program')) return '🧑‍💻';
+    if (l.includes('workout') || l.includes('exercise')) return '🏋️';
+    if (l.includes('study')) return '📖';
+    if (l.includes('yoga')) return '🧘‍♂️';
+    if (l.includes('read')) return '📚';
+    if (l.includes('run')) return '🏃';
+    if (l.includes('fruit')) return '🍎';
+    if (l.includes('vegetable') || l.includes('veggie')) return '🥦';
+    if (l.includes('walk')) return '🚶';
+    if (l.includes('water') || l.includes('drink')) return '💧';
+    // fallback
+    return '✨';
+  }
+
+  // Update newEmoji automatically when newLabel changes
+  useEffect(() => {
+    setNewEmoji(predictEmoji(newLabel));
+  }, [newLabel]);
+
   const months = getYearCalendarData();
   const activityCount = Object.keys(activityData).filter(date => date.startsWith(today.getFullYear())).length;
   const monthNames = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
@@ -183,16 +454,104 @@ function App() {
     <>
       <Analytics />
       <h1 className="banana-title" style={{ marginBottom: 0, marginTop: '0.5em' }}>streakio <span role="img" aria-label="flame">🔥</span></h1>
+      {/* Manage Activities Button */}
+      {/* Remove the current Manage Activities button from above the dropdown */}
+      {/* Add a floating, subtle button at the bottom right */}
+      {/* Place this just before the closing </> in the return */}
+      {/* Change the floating gear button to toggle the menu: if showManage is true, clicking the button closes it; if false, opens it.
+When the menu is open, hide the gear button. */}
+      {!showManage && (
+        <div style={{ position: 'fixed', top: 24, right: 24, zIndex: 1100 }}>
+          <button
+            onClick={() => setShowManage(true)}
+            title="Manage Activities"
+            style={{
+              background: '#f6faff',
+              border: '2px solid #ddd',
+              borderRadius: '50%',
+              width: 40,
+              height: 40,
+              boxShadow: '0 2px 8px #0001',
+              color: '#888',
+              fontSize: 22,
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              cursor: 'pointer',
+              opacity: 0.7,
+              transition: 'opacity 0.2s',
+              padding: 0,
+              margin: 0,
+              lineHeight: 1,
+            }}
+            onMouseOver={e => (e.currentTarget.style.opacity = 1)}
+            onMouseOut={e => (e.currentTarget.style.opacity = 0.7)}
+            aria-label="Manage Activities"
+          >
+            <span role="img" aria-label="settings" style={{lineHeight: 1, display: 'flex', alignItems: 'center', justifyContent: 'center'}}>
+              ⚙️
+            </span>
+          </button>
+        </div>
+      )}
+      {/* Manage Activities Modal/Panel */}
+      {showManage && (
+        <div className="manage-activities-modal" style={{ position: 'fixed', top: 0, left: 0, width: '100vw', height: '100vh', background: 'rgba(0,0,0,0.18)', zIndex: 1000, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+          <div style={{ background: '#fff', borderRadius: 12, padding: 24, minWidth: 320, maxWidth: 400, boxShadow: '0 4px 32px #0002', position: 'relative' }}>
+            <button
+              onClick={() => setShowManage(false)}
+              style={{ position: 'absolute', top: 10, right: 10, background: '#eee', border: 'none', borderRadius: 6, fontSize: 18, cursor: 'pointer', padding: '2px 10px' }}
+              aria-label="Close"
+            >
+              ×
+            </button>
+            <h2 style={{ marginTop: 0, marginBottom: 16, fontSize: '1.2em' }}>Manage Activities</h2>
+            {/* Add Activity Form */}
+            <form className="add-activity-form" onSubmit={handleAddActivity} style={{ display: 'flex', gap: 8, alignItems: 'center', marginBottom: 12 }}>
+              <span style={{ fontSize: '1.5em', width: 32, textAlign: 'center' }}>{newEmoji}</span>
+              <input
+                type="text"
+                placeholder="Label"
+                value={newLabel}
+                onChange={e => setNewLabel(e.target.value)}
+                maxLength={20}
+                required
+              />
+              <button className="banana-btn small" type="submit">Add</button>
+            </form>
+            {addError && <div className="banana-popup already" style={{ marginTop: 4 }}>{addError}</div>}
+            {/* List activities with delete buttons */}
+            <div className="activity-list" style={{ display: 'flex', flexDirection: 'column', gap: 6, marginTop: 8, justifyContent: 'center' }}>
+              {activities.map(a => (
+                <div key={a.key} className="activity-item" style={{ display: 'flex', alignItems: 'center', gap: 8, background: '#f6faff', borderRadius: 6, padding: '4px 10px' }}>
+                  <span style={{ fontSize: '1.1em' }}>{a.emoji}</span>
+                  <span style={{ margin: '0 4px', fontSize: '0.98em', flex: 1 }}>{a.label}</span>
+                  <button
+                    className="banana-btn small"
+                    style={{ background: '#eee', color: '#888', padding: '0 8px', fontSize: '0.9em', marginLeft: 2 }}
+                    title="Delete activity"
+                    onClick={() => handleDeleteActivity(a.key)}
+                    disabled={activities.length === 1}
+                  >
+                    ×
+                  </button>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+      )}
+      {/* Activity select dropdown */}
       <div style={{ display: 'flex', justifyContent: 'center', marginTop: '1.5em', marginBottom: '1em' }}>
         <select
           value={activity.key}
           onChange={e => {
-            const selected = ACTIVITIES.find(a => a.key === e.target.value);
+            const selected = activities.find(a => a.key === e.target.value);
             setActivity(selected);
           }}
           style={{ fontSize: '1.1em', padding: '0.3em 1em', borderRadius: 8 }}
         >
-          {ACTIVITIES.map(a => (
+          {activities.map(a => (
             <option key={a.key} value={a.key}>
               {a.emoji} {a.label}
             </option>
@@ -204,20 +563,7 @@ function App() {
           <div className={`banana-dots-fade${animating ? ' animating' : ''}`} key={activity.key + '-side'}>
             <div className="banana-actions">
               <div className="banana-question">
-                {activity.key === 'water' && 'Staying hydrated? Did you get those 3 liters in?'}
-                {activity.key === 'walk' && 'Great day for a stroll! Did you get in 30 minutes of walking today?'}
-                {activity.key === 'vegetables' && 'Fueling your body right! Did you enjoy 4 servings of veggies today?'}
-                {activity.key === 'read' && 'Feed your mind—did you take 15–30 minutes to read today?'}
-                {activity.key === 'study' && 'Leveling up! Did you spend 1 hour studying today?'}
-                {activity.key === 'fruits' && 'Sweet and healthy—did you have 3 servings of fruit today?'}
-                {activity.key === 'yoga' && 'Find your zen! Did you do yoga today?'}
-                {activity.key === 'poop' && 'Gut check! Did you poop today?'}
-                {activity.key === 'shower' && 'Fresh and clean! Did you take a shower today?'}
-                {activity.key === 'quit_smoking' && 'Did you stay smoke-free today? Keep those lungs happy!'}
-                {activity.key === 'quit_alcohol' && 'Did you stay alcohol-free today? Cheers to your health!'}
-                {activity.key === 'run' && 'Feel the burn! Did you go for a run today?'}
-                {activity.key === 'workout' && 'Strength and sweat! Did you complete your workout today?'}
-                {activity.key === 'code' && 'Did you code today?'}
+                {getActivityQuestion(activity.label)}
               </div>
               <button className="banana-btn small" onClick={handleActivity}>Yes</button>
             </div>
