@@ -500,14 +500,32 @@ When the menu is open, hide the gear button. */}
           <div style={{ background: '#fff', borderRadius: 12, padding: 24, minWidth: 320, maxWidth: 400, boxShadow: '0 4px 32px #0002', position: 'relative' }}>
             <button
               onClick={() => setShowManage(false)}
-              style={{ position: 'absolute', top: 10, right: 10, background: '#eee', border: 'none', borderRadius: 6, fontSize: 18, cursor: 'pointer', padding: '2px 10px' }}
+              style={{
+                position: 'absolute',
+                top: 6,
+                right: 6,
+                background: '#eee',
+                border: 'none',
+                borderRadius: 6,
+                fontSize: 16,
+                cursor: 'pointer',
+                width: 25,
+                height: 25,
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                lineHeight: 1,
+                color: '#222',
+                zIndex: 1,
+                padding: 0,
+              }}
               aria-label="Close"
             >
               ×
             </button>
             <h2 style={{ marginTop: 0, marginBottom: 16, fontSize: '1.2em' }}>Manage Activities</h2>
             {/* Add Activity Form */}
-            <form className="add-activity-form" onSubmit={handleAddActivity} style={{ display: 'flex', gap: 8, alignItems: 'center', marginBottom: 12 }}>
+            <form className="add-activity-form" onSubmit={handleAddActivity} style={{ display: 'flex', gap: 8, alignItems: 'center', marginBottom: 12, }}>
               <span style={{ fontSize: '1.5em', width: 32, textAlign: 'center' }}>{newEmoji}</span>
               <input
                 type="text"
@@ -541,6 +559,8 @@ When the menu is open, hide the gear button. */}
                       background: '#eee',
                       color: '#bbb',
                       padding: '1px 5px',
+                      height: 25,
+                      width: 30,
                       fontSize: 14,
                       marginLeft: 0,
                       lineHeight: 1,
