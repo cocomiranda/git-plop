@@ -56,27 +56,34 @@ function formatDate(date) {
 }
 
 function getStreak(data) {
-  // Find the most recent date with an entry
-  const dates = Object.keys(data).sort().reverse();
-  if (dates.length === 0) return 0;
+  const todayStr = formatDate(new Date());
+  const yesterday = new Date();
+  yesterday.setDate(yesterday.getDate() - 1);
+  const yesterdayStr = formatDate(yesterday);
 
-  let streak = 1;
-  let currentDate = new Date(dates[0]);
-
-  // Count consecutive days backwards from the most recent entry
-  for (let i = 1; i < 366; i++) {
-    const prevDate = new Date(currentDate);
-    prevDate.setDate(currentDate.getDate() - 1);
-    const prevDateStr = formatDate(prevDate);
-    
-    if (data[prevDateStr]) {
-      streak++;
-      currentDate = prevDate;
-    } else {
-      break;
+  if (data[todayStr]) {
+    // Count streak as before, starting from today
+    const dates = Object.keys(data).sort().reverse();
+    let streak = 1;
+    let currentDate = new Date(todayStr);
+    for (let i = 1; i < 366; i++) {
+      const prevDate = new Date(currentDate);
+      prevDate.setDate(currentDate.getDate() - 1);
+      const prevDateStr = formatDate(prevDate);
+      if (data[prevDateStr]) {
+        streak++;
+        currentDate = prevDate;
+      } else {
+        break;
+      }
     }
+    return streak;
+  } else if (data[yesterdayStr]) {
+    // Only yesterday is present, streak is 1
+    return 1;
+  } else {
+    return 0;
   }
-  return streak;
 }
 
 function getYearCalendarData() {
@@ -170,7 +177,6 @@ function getActivityQuestion(label) {
   if (l.includes('plan')) return 'Organized and ready! Did you plan your day?';
   if (l.includes('email')) return 'Inbox zero? Did you check your email today?';
   if (l.includes('meeting')) return 'Teamwork! Did you have a meeting today?';
-  if (l.includes('work')) return 'Hustle mode! Did you work today?';
   if (l.includes('volunteer')) return 'Giving back! Did you volunteer today?';
   if (l.includes('donate')) return 'Spread the love! Did you donate today?';
   if (l.includes('invest')) return 'Future focused! Did you invest today?';
@@ -227,7 +233,7 @@ function getActivityQuestion(label) {
   if (l.includes('alcohol') || l.includes('beer')) return 'Cheers to health! Did you avoid alcohol today?';
   if (l.includes('smok')) return 'Breathe easy! Did you avoid smoking today?';
   if (l.includes('code') || l.includes('program')) return 'Builder vibes! Did you code today?';
-  if (l.includes('workout') || l.includes('exercise')) return 'Strength and sweat! Did you work out today?';
+  if (l.includes('workout') || l.includes('exercise')) return 'Strength and sweat! Did you workout today?';
   if (l.includes('study')) return 'Level up! Did you study today?';
   if (l.includes('yoga')) return 'Find your zen! Did you do yoga today?';
   if (l.includes('read')) return 'Feed your mind! Did you read today?';
@@ -732,7 +738,7 @@ When the menu is open, hide the gear button. */}
               </div>
             </div>
           </div>
-          {(streak > 0 || activityCount > 1) && (
+          {streak > 0 && (
             <div className={`banana-dots-fade${animating ? ' animating' : ''}`} key={activity.key + '-streak'}>
               <div className="banana-streak">
                 {activity.key === 'quit_smoking' && (
