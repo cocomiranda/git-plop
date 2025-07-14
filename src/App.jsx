@@ -528,7 +528,21 @@ When the menu is open, hide the gear button. */}
                   <span style={{ margin: '0 4px', fontSize: '0.98em', flex: 1 }}>{a.label}</span>
                   <button
                     className="banana-btn small"
-                    style={{ background: '#eee', color: '#888', padding: '0 8px', fontSize: '0.9em', marginLeft: 2 }}
+                    style={{
+                      background: '#eee',
+                      color: '#bbb',
+                      padding: '1px 1px',
+                      width: 30,
+                      fontSize: 14,
+                      marginLeft: 0,
+                      lineHeight: 1,
+                      borderRadius: 4,
+                      border: 'none',
+                      cursor: 'pointer',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                    }}
                     title="Delete activity"
                     onClick={() => handleDeleteActivity(a.key)}
                     disabled={activities.length === 1}
