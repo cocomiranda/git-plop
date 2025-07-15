@@ -61,34 +61,25 @@ function formatDate(date) {
 }
 
 function getStreak(data) {
-  const todayStr = formatDate(new Date());
-  const yesterday = new Date();
-  yesterday.setDate(yesterday.getDate() - 1);
-  const yesterdayStr = formatDate(yesterday);
-
-  if (data[todayStr]) {
-    // Count streak as before, starting from today
-    const dates = Object.keys(data).sort().reverse();
-    let streak = 1;
-    let currentDate = new Date(todayStr);
-    for (let i = 1; i < 366; i++) {
-      const prevDate = new Date(currentDate);
-      prevDate.setDate(currentDate.getDate() - 1);
-      const prevDateStr = formatDate(prevDate);
-      if (data[prevDateStr]) {
-        streak++;
-        currentDate = prevDate;
-      } else {
-        break;
-      }
+  // Find the most recent log date (today if present, otherwise the latest date)
+  const dates = Object.keys(data).filter(d => data[d]);
+  if (dates.length === 0) return 0;
+  // Sort dates descending
+  const sorted = dates.sort((a, b) => b.localeCompare(a));
+  let streak = 1;
+  let currentDate = new Date(sorted[0]);
+  for (let i = 1; i < 366; i++) {
+    const prevDate = new Date(currentDate);
+    prevDate.setDate(currentDate.getDate() - 1);
+    const prevDateStr = formatDate(prevDate);
+    if (data[prevDateStr]) {
+      streak++;
+      currentDate = prevDate;
+    } else {
+      break;
     }
-    return streak;
-  } else if (data[yesterdayStr]) {
-    // Only yesterday is present, streak is 1
-    return 1;
-  } else {
-    return 0;
   }
+  return streak;
 }
 
 function getYearCalendarData() {
@@ -264,7 +255,6 @@ function App() {
   });
   const [activityData, setActivityDataState] = useState(getActivityData(getSelectedActivity().key));
   const [popup, setPopup] = useState(null);
-  const [streak, setStreak] = useState(0);
   const [view, setView] = useState('Month');
   const [animating, setAnimating] = useState(false);
   const [showAddForm, setShowAddForm] = useState(false);
@@ -280,10 +270,6 @@ function App() {
   useEffect(() => {
     saveActivities(activities);
   }, [activities]);
-
-  useEffect(() => {
-    setStreak(getStreak(activityData));
-  }, [activityData]);
 
   // Supabase helpers for activity data
   async function getActivityDataSupabase(user, activityKey) {
@@ -405,7 +391,7 @@ function App() {
       setAddError('Activity with this label already exists.');
       return;
     }
-    const newActivity = { key, label, emoji };
+    const newActivity = { key, label, emoji, type: 'do' };
     setActivities([...activities, newActivity]);
     setNewLabel('');
     setNewEmoji('');
@@ -540,6 +526,32 @@ function App() {
   const months = getYearCalendarData();
   const activityCount = Object.keys(activityData).filter(date => date.startsWith(today.getFullYear())).length;
   const monthNames = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+
+  // Helper to convert activity label to 'ing' form for streak message
+  function toIng(label) {
+    const l = label.toLowerCase();
+    // Custom cases
+    if (l === 'run') return 'running';
+    if (l === 'walk') return 'walking';
+    if (l === 'read') return 'reading';
+    if (l === 'yoga') return 'doing yoga';
+    if (l === 'study') return 'studying';
+    if (l === 'code') return 'coding';
+    if (l === 'workout') return 'working out';
+    if (l === 'shower') return 'showering';
+    if (l === 'poop') return 'pooping';
+    if (l === 'fruits') return 'eating fruits';
+    if (l === 'vegetables') return 'eating vegetables';
+    if (l === 'water') return 'drinking water';
+    if (l === 'quit smoking') return 'being smoke-free';
+    if (l === 'quit alcohol') return 'being alcohol-free';
+    // If label ends with 'e', drop it and add 'ing'
+    if (l.endsWith('e') && l.length > 2) return l.slice(0, -1) + 'ing';
+    // If label ends with 'y', replace with 'ying'
+    if (l.endsWith('y')) return l.slice(0, -1) + 'ying';
+    // Fallback: just add 'ing'
+    return l + 'ing';
+  }
 
   return (
     <>
@@ -938,53 +950,14 @@ When the menu is open, hide the gear button. */}
               </div>
             </div>
           </div>
-          {streak > 0 && (
+          {getStreak(activityData) > 0 && (
             <div className={`banana-dots-fade${animating ? ' animating' : ''}`} key={activity.key + '-streak'}>
               <div className="banana-streak">
-                {activity.key === 'quit_smoking' && (
-                  <>
-                    <span role="img" aria-label="streak">{getFlames(streak)}</span>
-                    <span className="banana-streak-count">{streak}</span>
-                    <span>days streak of being smoke-free</span>
-                  </>
-                )}
-                {activity.key === 'quit_alcohol' && (
-                  <>
-                    <span role="img" aria-label="streak">{getFlames(streak)}</span>
-                    <span className="banana-streak-count">{streak}</span>
-                    <span>days streak of being alcohol-free</span>
-                  </>
-                )}
-                {activity.type === 'eat' && (
-                  <>
-                    <span role="img" aria-label="streak">{getFlames(streak)}</span>
-                    <span className="banana-streak-count">{streak}</span>
-                    <span>days streak of eating {activity.label.toLowerCase()}</span>
-                  </>
-                )}
-                {activity.type === 'drink' && (
-                  <>
-                    <span role="img" aria-label="streak">{getFlames(streak)}</span>
-                    <span className="banana-streak-count">{streak}</span>
-                    <span>days streak of drinking {activity.label.toLowerCase()}</span>
-                  </>
-                )}
-                {activity.type === 'do' && (
-                  <>
-                    <span role="img" aria-label="streak">{getFlames(streak)}</span>
-                    <span className="banana-streak-count">{streak}</span>
-                    <span>days streak of {(() => {
-                      const key = activity.key;
-                      if (key === 'run') return 'running';
-                      if (key === 'walk') return 'walking';
-                      if (key === 'read') return 'reading';
-                      if (key === 'yoga') return 'doing yoga';
-                      if (key === 'study') return 'studying';
-                      if (key === 'code') return 'building cool stuff';
-                      return activity.label.toLowerCase();
-                    })()}</span>
-                  </>
-                )}
+                <>
+                  <span role="img" aria-label="streak">{getFlames(getStreak(activityData))}</span>
+                  <span className="banana-streak-count">{getStreak(activityData)}</span>
+                  <span>days streak of {toIng(activity.label)}</span>
+                </>
               </div>
             </div>
           )}
