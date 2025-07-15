@@ -581,7 +581,7 @@ When the menu is open, hide the gear button. */}
               onMouseOut={e => (e.currentTarget.style.opacity = 0.7)}
               aria-label="User Profile"
             >
-              <span role="img" aria-label="user" style={{lineHeight: 1, display: 'flex', alignItems: 'center', justifyContent: 'center'}}>
+              <span role="img" aria-label="user" style={{lineHeight: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', marginLeft: '1px'}}>
                 👤
               </span>
             </button>
