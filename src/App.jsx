@@ -560,6 +560,7 @@ When the menu is open, hide the gear button. */}
               style={{
                 background: user ? '#e0e7ff' : 'none', // subtle blue highlight if logged in
                 border: user ? '2px solid #6366f1' : 'none', // blue border if logged in
+                marginLeft: user ? '-1px' : '0', // shift border 1px left if logged in
                 width: 40,
                 height: 40,
                 color: '#888',
@@ -573,7 +574,7 @@ When the menu is open, hide the gear button. */}
                 padding: 0,
                 margin: 0,
                 lineHeight: 1,
-                boxShadow: user ? '-20px 0 8px #6366f155' : 'none', // subtle glow if logged in, shifted 1px left
+                boxShadow: user ? '0 0 8px #6366f155' : 'none', // subtle glow if logged in
               }}
               onClick={() => setShowLogin(true)}
               onMouseOver={e => (e.currentTarget.style.opacity = 1)}
