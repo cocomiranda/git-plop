@@ -456,7 +456,6 @@ function App() {
     if (l.includes('plan')) return '🗓️';
     if (l.includes('email')) return '📧';
     if (l.includes('meeting')) return '👔';
-    if (l.includes('work')) return '💼';
     if (l.includes('volunteer')) return '🤝';
     if (l.includes('donate')) return '💸';
     if (l.includes('invest')) return '📈';
