@@ -284,13 +284,55 @@ function App() {
     setStreak(getStreak(activityData));
   }, [activityData]);
 
+  // Supabase helpers for activity data
+  async function getActivityDataSupabase(user, activityKey) {
+    const { data, error } = await supabase
+      .from('activity_data')
+      .select('date, value')
+      .eq('user_id', user.id)
+      .eq('activity_key', activityKey);
+    if (error) return {};
+    const result = {};
+    data.forEach(row => { result[row.date] = row.value; });
+    return result;
+  }
+  async function setActivityDataSupabase(user, activityKey, data) {
+    // Remove all previous for this activity/user, then insert new
+    const dates = Object.keys(data);
+    // Delete all previous
+    await supabase.from('activity_data').delete().eq('user_id', user.id).eq('activity_key', activityKey);
+    // Insert new
+    if (dates.length > 0) {
+      const rows = dates.map(date => ({ user_id: user.id, activity_key: activityKey, date, value: data[date] }));
+      console.log('Pushing to Supabase:', rows);
+      await supabase.from('activity_data').insert(rows);
+    }
+  }
+
+  // Replace getActivityData and setActivityData with user-aware versions
+  async function loadActivityData(activityKey) {
+    if (user) {
+      const data = await getActivityDataSupabase(user, activityKey);
+      setActivityDataState(data);
+    } else {
+      setActivityDataState(getActivityData(activityKey));
+    }
+  }
+  // Update saveActivityData to always update localStorage, and also Supabase if logged in
+  async function saveActivityData(activityKey, data) {
+    setActivityData(activityKey, data); // always update localStorage
+    if (user) {
+      await setActivityDataSupabase(user, activityKey, data);
+    }
+  }
+
+  // Update activityData when activity or user changes
   useEffect(() => {
-    setSelectedActivity(activity);
-    setActivityDataState(getActivityData(activity.key));
+    loadActivityData(activity.key);
     setAnimating(true);
     const t = setTimeout(() => setAnimating(false), 350);
     return () => clearTimeout(t);
-  }, [activity]);
+  }, [activity, user]);
 
   // Check for user session on mount
   useEffect(() => {
@@ -305,20 +347,26 @@ function App() {
     };
   }, []);
 
-  const handleActivity = () => {
+  // Update handleActivity to use new saveActivityData
+  const handleActivity = async () => {
     const date = formatDate(today);
     if (activityData[date]) {
       setPopup('already');
       return;
     }
     const newData = { ...activityData, [date]: true };
-    setActivityData(activity.key, newData);
+    await saveActivityData(activity.key, newData);
     setActivityDataState(newData);
     setPopup('success');
   };
 
-  const handleReset = () => {
-    localStorage.removeItem(`${activity.key}Data`);
+  // Update handleReset to use new saveActivityData
+  const handleReset = async () => {
+    if (user) {
+      await setActivityDataSupabase(user, activity.key, {});
+    } else {
+      localStorage.removeItem(`${activity.key}Data`);
+    }
     setActivityDataState({});
     setPopup(null);
   };
@@ -497,7 +545,7 @@ When the menu is open, hide the gear button. */}
         <>
           <div style={{ position: 'fixed', top: 24, left: 24, zIndex: 1100 }}>
             <button
-              title="User Profile"
+              title={user ? "Logout" : "User Profile"}
               style={{
                 background: 'none',
                 border: 'none',
@@ -514,12 +562,13 @@ When the menu is open, hide the gear button. */}
                 padding: 0,
                 margin: 0,
                 lineHeight: 1,
-                boxShadow: 'none',
+                boxShadow: user ? '0 0 0 6px #4caf5044' : '0 0 0 6px #f4433644',
+                borderRadius: '50%',
               }}
-              onClick={() => setShowLogin(true)}
+              onClick={user ? async () => { await supabase.auth.signOut(); setShowLogin(false); } : () => setShowLogin(true)}
               onMouseOver={e => (e.currentTarget.style.opacity = 1)}
               onMouseOut={e => (e.currentTarget.style.opacity = 0.7)}
-              aria-label="User Profile"
+              aria-label={user ? "Logout" : "User Profile"}
             >
               <span role="img" aria-label="user" style={{lineHeight: 1, display: 'flex', alignItems: 'center', justifyContent: 'center'}}>
                 👤
@@ -652,7 +701,7 @@ When the menu is open, hide the gear button. */}
       {/* Login Popup */}
       {showLogin && (
         <div style={{ position: 'fixed', top: 0, left: 0, width: '100vw', height: '100vh', background: 'rgba(0,0,0,0.18)', zIndex: 2000, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-          <div style={{ background: '#fff', borderRadius: 12, padding: 18, minWidth: 240, maxWidth: 300, boxShadow: '0 4px 32px #0002', position: 'relative', textAlign: 'center' }}>
+          <div style={{ background: '#fff', borderRadius: 12, padding: 18, minWidth: 240, maxWidth: 300, boxShadow: '0 0 32px #0002', position: 'relative', textAlign: 'center' }}>
             <button
               onClick={() => setShowLogin(false)}
               style={{
@@ -678,30 +727,33 @@ When the menu is open, hide the gear button. */}
             >
               ×
             </button>
-            <h2 style={{ marginTop: 0, marginBottom: 16, fontSize: '1.1em' }}>Login</h2>
-            <button className="gsi-material-button" onClick={handleGoogleLogin} style={{ border: 'none', background: 'none', padding: 0, margin: '0 auto', cursor: 'pointer' }}>
-              <div className="gsi-material-button-state"></div>
-              <div className="gsi-material-button-content-wrapper" style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '0.6em 1em', border: '1.5px solid #4285F4', borderRadius: 8, background: '#fff', fontWeight: 600, fontSize: '1em', color: '#4285F4' }}>
-                <div className="gsi-material-button-icon" style={{ width: 22, height: 22, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                  <svg version="1.1" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 48 48" xmlnsXlink="http://www.w3.org/1999/xlink" style={{ display: 'block', width: 22, height: 22 }}>
-                    <path fill="#EA4335" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z"></path>
-                    <path fill="#4285F4" d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z"></path>
-                    <path fill="#FBBC05" d="M10.53 28.59c-.48-1.45-.76-2.99-.76-4.59s.27-3.14.76-4.59l-7.98-6.19C.92 16.46 0 20.12 0 24c0 3.88.92 7.54 2.56 10.78l7.97-6.19z"></path>
-                    <path fill="#34A853" d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.15 1.45-4.92 2.3-8.16 2.3-6.26 0-11.57-4.22-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z"></path>
-                    <path fill="none" d="M0 0h48v48H0z"></path>
-                  </svg>
+            <h2 style={{ marginTop: 0, marginBottom: 16, fontSize: '1.1em' }}>{user ? 'Account' : 'Login'}</h2>
+            {user ? (
+              <div role="menuitem" tabIndex={0} className="group __menu-item gap-1.5" data-testid="log-out-menu-item" data-orientation="vertical" data-radix-collection-item="" style={{ display: 'flex', alignItems: 'center', gap: 8, justifyContent: 'center', cursor: 'pointer', color: '#d32f2f', fontWeight: 600, fontSize: '1em', border: '1.5px solid #d32f2f', borderRadius: 8, padding: '0.6em 1em', margin: '0 auto' }} onClick={async () => { await supabase.auth.signOut(); setShowLogin(false); }}>
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                  <svg width="20" height="20" viewBox="0 0 20 20" fill="currentColor" xmlns="http://www.w3.org/2000/svg" aria-hidden="true"><path d="M3.50171 12.6663V7.33333C3.50171 6.64424 3.50106 6.08728 3.53784 5.63704C3.57525 5.17925 3.65463 4.77342 3.84644 4.39681L3.96851 4.17806C4.2726 3.68235 4.70919 3.2785 5.23023 3.01302L5.3728 2.94661C5.7091 2.80238 6.06981 2.73717 6.47046 2.70443C6.9207 2.66764 7.47766 2.66829 8.16675 2.66829H9.16675L9.30054 2.68197C9.60367 2.7439 9.83179 3.0119 9.83179 3.33333C9.83179 3.65476 9.60367 3.92277 9.30054 3.9847L9.16675 3.99837H8.16675C7.45571 3.99837 6.96238 3.99926 6.57886 4.0306C6.297 4.05363 6.10737 4.09049 5.96362 4.14193L5.83374 4.19857C5.53148 4.35259 5.27861 4.58671 5.1023 4.87435L5.03198 5.00032C4.95147 5.15833 4.89472 5.36974 4.86401 5.74544C4.83268 6.12896 4.83179 6.6223 4.83179 7.33333V12.6663C4.83179 13.3772 4.8327 13.8707 4.86401 14.2542C4.8947 14.6298 4.95153 14.8414 5.03198 14.9993L5.1023 15.1263C5.27861 15.4137 5.53163 15.6482 5.83374 15.8021L5.96362 15.8577C6.1074 15.9092 6.29691 15.947 6.57886 15.9701C6.96238 16.0014 7.45571 16.0013 8.16675 16.0013H9.16675L9.30054 16.015C9.6036 16.0769 9.83163 16.345 9.83179 16.6663C9.83179 16.9877 9.60363 17.2558 9.30054 17.3177L9.16675 17.3314H8.16675C7.47766 17.3314 6.9207 17.332 6.47046 17.2952C6.06978 17.2625 5.70912 17.1973 5.3728 17.0531L5.23023 16.9867C4.70911 16.7211 4.27261 16.3174 3.96851 15.8216L3.84644 15.6038C3.65447 15.2271 3.57526 14.8206 3.53784 14.3626C3.50107 13.9124 3.50171 13.3553 3.50171 12.6663ZM13.8035 13.804C13.5438 14.0634 13.1226 14.0635 12.863 13.804C12.6033 13.5443 12.6033 13.1223 12.863 12.8626L13.8035 13.804ZM12.863 6.19661C13.0903 5.96939 13.4409 5.94126 13.699 6.11165L13.8035 6.19661L17.1375 9.52962C17.3969 9.78923 17.3968 10.2104 17.1375 10.4701L13.8035 13.804L13.3337 13.3333L12.863 12.8626L15.0603 10.6654H9.16675C8.79959 10.6654 8.50189 10.3674 8.50171 10.0003C8.50171 9.63306 8.79948 9.33529 9.16675 9.33529H15.0613L12.863 7.13704L12.7781 7.03255C12.6077 6.77449 12.6359 6.42386 12.863 6.19661Z"></path></svg>
                 </div>
-                <span className="gsi-material-button-contents">Sign in with Google</span>
-                <span style={{ display: 'none' }}>Sign in with Google</span>
+                Logout
               </div>
-            </button>
+            ) : (
+              <button className="gsi-material-button" onClick={handleGoogleLogin} style={{ border: 'none', background: 'none', padding: 0, margin: '0 auto', cursor: 'pointer' }}>
+                <div className="gsi-material-button-state"></div>
+                <div className="gsi-material-button-content-wrapper" style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '0.6em 1em', border: '1.5px solid #4285F4', borderRadius: 8, background: '#fff', fontWeight: 600, fontSize: '1em', color: '#4285F4' }}>
+                  <div className="gsi-material-button-icon" style={{ width: 22, height: 22, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                    <svg version="1.1" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 48 48" xmlnsXlink="http://www.w3.org/1999/xlink" style={{ display: 'block', width: 22, height: 22 }}>
+                      <path fill="#EA4335" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z"></path>
+                      <path fill="#4285F4" d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z"></path>
+                      <path fill="#FBBC05" d="M10.53 28.59c-.48-1.45-.76-2.99-.76-4.59s.27-3.14.76-4.59l-7.98-6.19C.92 16.46 0 20.12 0 24c0 3.88.92 7.54 2.56 10.78l7.97-6.19z"></path>
+                      <path fill="#34A853" d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.15 1.45-4.92 2.3-8.16 2.3-6.26 0-11.57-4.22-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z"></path>
+                      <path fill="none" d="M0 0h48v48H0z"></path>
+                    </svg>
+                  </div>
+                  <span className="gsi-material-button-contents">Sign in with Google</span>
+                  <span style={{ display: 'none' }}>Sign in with Google</span>
+                </div>
+              </button>
+            )}
           </div>
-        </div>
-      )}
-      {/* Optionally show user info if logged in */}
-      {user && (
-        <div style={{ position: 'fixed', top: 70, left: 24, background: '#fff', borderRadius: 8, boxShadow: '0 2px 8px #0001', padding: '0.7em 1.2em', zIndex: 1100, color: '#333', fontWeight: 500 }}>
-          <span>Welcome, {user.email}</span>
         </div>
       )}
       {/* Activity select dropdown */}
