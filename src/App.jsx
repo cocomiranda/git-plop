@@ -297,35 +297,6 @@ function App() {
     }
   }
 
-  // Supabase sync functions for user activities
-  async function fetchUserActivities(userId) {
-    const { data, error } = await supabase
-      .from('user_activities')
-      .select('*')
-      .eq('user_id', userId);
-    if (error) {
-      console.error(error);
-      return [];
-    }
-    return data;
-  }
-
-  async function addUserActivity(userId, activity) {
-    const { error } = await supabase
-      .from('user_activities')
-      .insert([{ user_id: userId, ...activity }]);
-    if (error) console.error(error);
-  }
-
-  async function deleteUserActivity(userId, activity_key) {
-    const { error } = await supabase
-      .from('user_activities')
-      .delete()
-      .eq('user_id', userId)
-      .eq('activity_key', activity_key);
-    if (error) console.error(error);
-  }
-
   // Replace getActivityData and setActivityData with user-aware versions
   async function loadActivityData(activityKey) {
     if (user) {
@@ -407,7 +378,7 @@ function App() {
   }, [popup]);
 
   // Add a new activity
-  const handleAddActivity = async (e) => {
+  const handleAddActivity = (e) => {
     e.preventDefault();
     setAddError('');
     const label = newLabel.trim();
@@ -422,18 +393,12 @@ function App() {
       setAddError('Activity with this label already exists.');
       return;
     }
-    const newActivity = { key, label, emoji, type: 'do', activity_key: key };
+    const newActivity = { key, label, emoji, type: 'do' };
     setActivities([...activities, newActivity]);
     setNewLabel('');
     setNewEmoji('');
     setShowManage(false);
     setActivity(newActivity);
-    // Add to Supabase if logged in
-    if (user) {
-      await addUserActivity(user.id, newActivity);
-      // Refresh activities from Supabase to ensure consistency
-      await refreshUserActivities(user.id);
-    }
   };
 
   // Delete an activity and its data
@@ -653,60 +618,6 @@ function App() {
     fetchUserActivityKeys();
     // eslint-disable-next-line
   }, [user, activities]);
-
-  // Add a function to refresh activities from Supabase and update state
-  async function refreshUserActivities(userId) {
-    const data = await fetchUserActivities(userId);
-    // Map activity_key to key for compatibility and filter out any without a key
-    const mapped = (data || []).map(a => ({
-      ...a,
-      key: a.activity_key || a.key
-    })).filter(a => a.key);
-    setActivities(mapped);
-    setFilteredActivities(mapped);
-    if (mapped.length > 0) {
-      setActivity(mapped[0]);
-    }
-  }
-
-  // Define default activities for new users
-  const DEFAULT_ACTIVITIES = [
-    { key: 'water', label: 'Water', emoji: '💧', type: 'drink' },
-    { key: 'walk', label: 'Walk', emoji: '🚶', type: 'do' },
-    { key: 'run', label: 'Run', emoji: '🏃', type: 'do' },
-    { key: 'workout', label: 'Workout', emoji: '🏋️', type: 'do' },
-    { key: 'code', label: 'Code', emoji: '🧑‍💻', type: 'do' },
-    { key: 'poop', label: 'Poop', emoji: '💩', type: 'do' },
-    { key: 'shower', label: 'Shower', emoji: '🚿', type: 'do' },
-    { key: 'camp', label: 'Camp', emoji: '⛺', type: 'do' }
-  ];
-
-  // In the useEffect that runs when user changes, ensure default activities exist for new users and always fetch activities from Supabase
-  useEffect(() => {
-    async function ensureDefaultActivities() {
-      if (user) {
-        const { data, error } = await supabase
-          .from('user_activities')
-          .select('activity_key')
-          .eq('user_id', user.id);
-        if (!error && data && data.length === 0) {
-          // User has no activities, insert defaults
-          const activitiesToInsert = DEFAULT_ACTIVITIES.map(a => ({
-            user_id: user.id,
-            ...a,
-            activity_key: a.key
-          }));
-          await supabase.from('user_activities').insert(activitiesToInsert);
-          // Now fetch and update state
-          await refreshUserActivities(user.id);
-        } else {
-          // If user already has activities, fetch and update state
-          await refreshUserActivities(user.id);
-        }
-      }
-    }
-    ensureDefaultActivities();
-  }, [user]);
 
   return (
     <>
@@ -958,19 +869,17 @@ When the menu is open, hide the gear button. */}
         </div>
       )}
       {/* Activity select dropdown */}
-      {/* Add a console.log for debugging before rendering the dropdown */}
-      {console.log('filteredActivities:', filteredActivities)}
       <div style={{ display: 'flex', justifyContent: 'center', marginTop: '1.5em', marginBottom: '1em' }}>
         <select
-          value={activity?.key || ''}
+          value={activity.key}
           onChange={e => {
-            const selected = filteredActivities.find(a => a && a.key === e.target.value);
+            const selected = filteredActivities.find(a => a.key === e.target.value);
             setActivity(selected);
             setView('Month'); // Also switch to Month view on dropdown change
           }}
           style={{ fontSize: '1.1em', padding: '0.3em 1em', borderRadius: 8 }}
         >
-          {filteredActivities.filter(a => a && a.key).map(a => (
+          {filteredActivities.map(a => (
             <option key={a.key} value={a.key}>
               {a.emoji} {a.label}
             </option>
