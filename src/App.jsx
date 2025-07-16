@@ -679,6 +679,47 @@ function App() {
     // eslint-disable-next-line
   }, [user]);
 
+  useEffect(() => {
+    async function syncUserActivities() {
+      if (user && user.id) {
+        const { data, error } = await supabase
+          .from('user_activity')
+          .select('key, label, emoji, type')
+          .eq('user_id', user.id);
+        if (!error && data && data.length === 0) {
+          const defaultActivities = getStoredActivities().map(a => ({
+            user_id: user.id,
+            key: a.key,
+            label: a.label,
+            emoji: a.emoji,
+            type: a.type
+          }));
+          const { error: insertError } = await supabase.from('user_activity').insert(defaultActivities);
+          if (insertError) {
+            console.log('Supabase insert error:', insertError);
+          }
+          // Fetch again after insert
+          const { data: inserted, error: fetchError } = await supabase
+            .from('user_activity')
+            .select('key, label, emoji, type')
+            .eq('user_id', user.id);
+          if (!fetchError && inserted) {
+            setActivities(inserted);
+            saveActivities(inserted);
+          }
+        } else if (!error && data && data.length > 0) {
+          setActivities(data);
+          saveActivities(data);
+        }
+      } else {
+        setActivities(getStoredActivities());
+        saveActivities(getStoredActivities());
+      }
+    }
+    syncUserActivities();
+    // eslint-disable-next-line
+  }, [user]);
+
   return (
     <>
       <Analytics />
