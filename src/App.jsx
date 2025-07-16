@@ -308,6 +308,12 @@ function App() {
     return data.map(row => row.activity_key);
   }
 
+  // Insert default user activities for first login
+  async function insertDefaultUserActivities(user) {
+    const rows = DEFAULT_ACTIVITY_KEYS.map(key => ({ user_id: user.id, activity_key: key }));
+    await supabase.from('user_activity').insert(rows);
+  }
+
   // Add this helper to insert a user activity
   async function insertUserActivity(user, activity) {
     await supabase.from('user_activity').insert({
@@ -591,16 +597,25 @@ function App() {
   useEffect(() => {
     async function setupUserActivities() {
       if (user) {
-        // Always fetch user activities from Supabase
-        const { data, error } = await supabase
-          .from('user_activity')
-          .select('*')
-          .eq('user_id', user.id);
-        if (!error && data && data.length > 0) {
-          setFilteredActivities(data);
-          setActivity(data[0]);
+        // Check if user has any user_activity records
+        const userActivityKeys = await fetchUserActivities(user);
+        if (userActivityKeys.length === 0) {
+          // First login: insert defaults
+          await insertDefaultUserActivities(user);
+          // Use default activities for dropdown
+          setFilteredActivities(activities.filter(a => DEFAULT_ACTIVITY_KEYS.includes(a.key)));
+          setActivity(activities.find(a => a.key === DEFAULT_ACTIVITY_KEYS[0]));
         } else {
-          setFilteredActivities([]);
+          // Use user_activity keys for dropdown
+          const filtered = userActivityKeys.map(key => {
+            const found = activities.find(a => a.key === key);
+            if (found) return found;
+            return { key, label: key.charAt(0).toUpperCase() + key.slice(1), emoji: '✨', type: 'do' };
+          });
+          setFilteredActivities(filtered);
+          if (!filtered.find(a => a.key === activity.key) && filtered.length > 0) {
+            setActivity(filtered[0]);
+          }
         }
       } else {
         setFilteredActivities(activities);
