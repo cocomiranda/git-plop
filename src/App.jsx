@@ -602,7 +602,6 @@ function App() {
         if (userActivityKeys.length === 0) {
           // First login: insert defaults
           await insertDefaultUserActivities(user);
-          // Use default activities for dropdown
           setFilteredActivities(activities.filter(a => DEFAULT_ACTIVITY_KEYS.includes(a.key)));
           setActivity(activities.find(a => a.key === DEFAULT_ACTIVITY_KEYS[0]));
         } else {
