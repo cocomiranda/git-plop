@@ -8,8 +8,6 @@ const SUPABASE_URL = 'https://ifgyccxvapcjbrxcfjvr.supabase.co';
 const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImlmZ3ljY3h2YXBjamJyeGNmanZyIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTI1NjMwNjIsImV4cCI6MjA2ODEzOTA2Mn0.JyH702xYjyIJ70LCdH7ieO3nJnGojaTejQ2DEMGMKLA';
 const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
-const DEFAULT_ACTIVITY_KEYS = ['walk', 'run', 'code', 'read', 'workout'];
-
 const today = new Date();
 
 function getStoredActivities() {
@@ -267,7 +265,6 @@ function App() {
   const [showLogin, setShowLogin] = useState(false);
   const [user, setUser] = useState(null);
   const [showWelcome, setShowWelcome] = useState(false);
-  const [filteredActivities, setFilteredActivities] = useState(activities);
 
   // Update activities in localStorage whenever they change
   useEffect(() => {
@@ -297,32 +294,6 @@ function App() {
       console.log('Pushing to Supabase:', rows);
       await supabase.from('activity_data').insert(rows);
     }
-  }
-
-  // Fetch user activities from user_activity table
-  async function fetchUserActivities(user) {
-    const { data, error } = await supabase
-      .from('user_activity')
-      .select('activity_key');
-    if (error) return [];
-    return data.map(row => row.activity_key);
-  }
-
-  // Insert default user activities for first login
-  async function insertDefaultUserActivities(user) {
-    const rows = DEFAULT_ACTIVITY_KEYS.map(key => ({ user_id: user.id, activity_key: key }));
-    await supabase.from('user_activity').insert(rows);
-  }
-
-  // Add this helper to insert a user activity
-  async function insertUserActivity(user, activity) {
-    await supabase.from('user_activity').insert({
-      user_id: user.id,
-      key: activity.key,
-      label: activity.label,
-      emoji: activity.emoji,
-      type: activity.type
-    });
   }
 
   // Replace getActivityData and setActivityData with user-aware versions
@@ -405,7 +376,7 @@ function App() {
   }, [popup]);
 
   // Add a new activity
-  const handleAddActivity = async (e) => {
+  const handleAddActivity = (e) => {
     e.preventDefault();
     setAddError('');
     const label = newLabel.trim();
@@ -426,18 +397,6 @@ function App() {
     setNewEmoji('');
     setShowManage(false);
     setActivity(newActivity);
-    if (user) {
-      await insertUserActivity(user, newActivity);
-      // Fetch updated activities from Supabase
-      const userActivityKeys = await fetchUserActivities(user);
-      const filtered = userActivityKeys.map(key => {
-        const found = activities.find(a => a.key === key);
-        if (found) return found;
-        return { key, label: key.charAt(0).toUpperCase() + key.slice(1), emoji: '✨', type: 'do' };
-      });
-      setFilteredActivities(filtered);
-      setActivity(newActivity);
-    }
   };
 
   // Delete an activity and its data
@@ -594,59 +553,6 @@ function App() {
     return l + 'ing';
   }
 
-  useEffect(() => {
-    async function setupUserActivities() {
-      if (user) {
-        // Check if user has any user_activity records
-        const userActivityKeys = await fetchUserActivities(user);
-        if (userActivityKeys.length === 0) {
-          // First login: insert defaults
-          await insertDefaultUserActivities(user);
-          // Use default activities for dropdown
-          setFilteredActivities(activities.filter(a => DEFAULT_ACTIVITY_KEYS.includes(a.key)));
-          setActivity(activities.find(a => a.key === DEFAULT_ACTIVITY_KEYS[0]));
-        } else {
-          // Use user_activity keys for dropdown
-          const filtered = userActivityKeys.map(key => {
-            const found = activities.find(a => a.key === key);
-            if (found) return found;
-            return { key, label: key.charAt(0).toUpperCase() + key.slice(1), emoji: '✨', type: 'do' };
-          });
-          setFilteredActivities(filtered);
-          if (!filtered.find(a => a.key === activity.key) && filtered.length > 0) {
-            setActivity(filtered[0]);
-          }
-        }
-      } else {
-        setFilteredActivities(activities);
-      }
-    }
-    setupUserActivities();
-    // eslint-disable-next-line
-  }, [user, activities]);
-
-  // Ensure all filteredActivities are present in user_activity for logged-in users
-  useEffect(() => {
-    async function syncFilteredToUserActivity() {
-      if (user && filteredActivities.length > 0) {
-        const userActivityKeys = await fetchUserActivities(user);
-        const missing = filteredActivities.filter(a => !userActivityKeys.includes(a.key));
-        if (missing.length > 0) {
-          const rows = missing.map(a => ({
-            user_id: user.id,
-            key: a.key,
-            label: a.label,
-            emoji: a.emoji,
-            type: a.type
-          }));
-          await supabase.from('user_activity').insert(rows);
-        }
-      }
-    }
-    syncFilteredToUserActivity();
-    // eslint-disable-next-line
-  }, [filteredActivities, user]);
-
   return (
     <>
       <Analytics />
@@ -770,7 +676,7 @@ When the menu is open, hide the gear button. */}
             {addError && <div className="banana-popup already" style={{ marginTop: 4 }}>{addError}</div>}
             {/* List activities with delete buttons */}
             <div className="activity-list" style={{ display: 'flex', flexDirection: 'column', gap: 6, marginTop: 8, justifyContent: 'center' }}>
-              {filteredActivities.map(a => (
+              {activities.map(a => (
                 <div key={a.key} className="activity-item" style={{
                   display: 'flex',
                   alignItems: 'center',
@@ -906,7 +812,7 @@ When the menu is open, hide the gear button. */}
           }}
           style={{ fontSize: '1.1em', padding: '0.3em 1em', borderRadius: 8 }}
         >
-          {filteredActivities.map(a => (
+          {activities.map(a => (
             <option key={a.key} value={a.key}>
               {a.emoji} {a.label}
             </option>
