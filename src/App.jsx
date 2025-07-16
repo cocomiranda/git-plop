@@ -33,7 +33,7 @@ function getStoredActivities() {
     { key: 'medicine', label: 'Medicine', emoji: '💊', type: 'do' },
     { key: 'sleep', label: 'Sleep', emoji: '😴', type: 'do' },
     { key: 'alcohol', label: 'No Alcohol', emoji: '🚫🍺', type: 'quit' },
-    { key: 'smoking', label: 'No Smoking', emoji: '🚫🚬', type: 'quit' },
+    { key: 'smoking', label: 'No Smoking', emoji: '🚭', type: 'quit' },
   ];
 }
 
@@ -627,8 +627,9 @@ function App() {
             type: a.type
           }));
           await supabase.from('user_activity').insert(defaultActivities);
-          // Optionally, update local state to reflect these activities
+          // Update local state and localStorage to reflect these activities
           setActivities(getStoredActivities());
+          saveActivities(getStoredActivities());
         } else if (!error && data && data.length > 0) {
           // If user already has activities, you could load them here if you want to sync
         }
