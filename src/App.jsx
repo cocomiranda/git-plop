@@ -314,6 +314,17 @@ function App() {
     await supabase.from('user_activity').insert(rows);
   }
 
+  // Add this helper to insert a user activity
+  async function insertUserActivity(user, activity) {
+    await supabase.from('user_activity').insert({
+      user_id: user.id,
+      key: activity.key,
+      label: activity.label,
+      emoji: activity.emoji,
+      type: activity.type
+    });
+  }
+
   // Replace getActivityData and setActivityData with user-aware versions
   async function loadActivityData(activityKey) {
     if (user) {
@@ -394,7 +405,7 @@ function App() {
   }, [popup]);
 
   // Add a new activity
-  const handleAddActivity = (e) => {
+  const handleAddActivity = async (e) => {
     e.preventDefault();
     setAddError('');
     const label = newLabel.trim();
@@ -415,6 +426,9 @@ function App() {
     setNewEmoji('');
     setShowManage(false);
     setActivity(newActivity);
+    if (user) {
+      await insertUserActivity(user, newActivity);
+    }
   };
 
   // Delete an activity and its data
