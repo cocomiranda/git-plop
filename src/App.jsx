@@ -625,6 +625,28 @@ function App() {
     // eslint-disable-next-line
   }, [user, activities]);
 
+  // Ensure all filteredActivities are present in user_activity for logged-in users
+  useEffect(() => {
+    async function syncFilteredToUserActivity() {
+      if (user && filteredActivities.length > 0) {
+        const userActivityKeys = await fetchUserActivities(user);
+        const missing = filteredActivities.filter(a => !userActivityKeys.includes(a.key));
+        if (missing.length > 0) {
+          const rows = missing.map(a => ({
+            user_id: user.id,
+            key: a.key,
+            label: a.label,
+            emoji: a.emoji,
+            type: a.type
+          }));
+          await supabase.from('user_activity').insert(rows);
+        }
+      }
+    }
+    syncFilteredToUserActivity();
+    // eslint-disable-next-line
+  }, [filteredActivities, user]);
+
   return (
     <>
       <Analytics />
