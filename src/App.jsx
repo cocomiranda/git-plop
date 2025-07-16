@@ -297,6 +297,35 @@ function App() {
     }
   }
 
+  // Supabase sync functions for user activities
+  async function fetchUserActivities(userId) {
+    const { data, error } = await supabase
+      .from('user_activities')
+      .select('*')
+      .eq('user_id', userId);
+    if (error) {
+      console.error(error);
+      return [];
+    }
+    return data;
+  }
+
+  async function addUserActivity(userId, activity) {
+    const { error } = await supabase
+      .from('user_activities')
+      .insert([{ user_id: userId, ...activity }]);
+    if (error) console.error(error);
+  }
+
+  async function deleteUserActivity(userId, activity_key) {
+    const { error } = await supabase
+      .from('user_activities')
+      .delete()
+      .eq('user_id', userId)
+      .eq('activity_key', activity_key);
+    if (error) console.error(error);
+  }
+
   // Replace getActivityData and setActivityData with user-aware versions
   async function loadActivityData(activityKey) {
     if (user) {
@@ -318,6 +347,7 @@ function App() {
   useEffect(() => {
     loadActivityData(activity.key);
     setAnimating(true);
+    setView('Month'); // Always switch to Month view on activity change
     const t = setTimeout(() => setAnimating(false), 350);
     return () => clearTimeout(t);
   }, [activity, user]);
@@ -552,6 +582,35 @@ function App() {
     if (l.endsWith('y')) return l.slice(0, -1) + 'ying';
     // Fallback: just add 'ing'
     return l + 'ing';
+  }
+
+  // Helper to get log count for the current view
+  function getActivityCountForView(view, activityData) {
+    const today = new Date();
+    if (view === 'Year') {
+      const yearStr = today.getFullYear().toString();
+      return Object.keys(activityData).filter(date => date.startsWith(yearStr) && activityData[date]).length;
+    }
+    if (view === 'Month') {
+      const year = today.getFullYear();
+      const month = String(today.getMonth() + 1).padStart(2, '0');
+      return Object.keys(activityData).filter(date => date.startsWith(`${year}-${month}`) && activityData[date]).length;
+    }
+    if (view === 'Week') {
+      // Get Monday of this week
+      const now = new Date();
+      const dayOfWeek = now.getDay() === 0 ? 6 : now.getDay() - 1;
+      const monday = new Date(now);
+      monday.setDate(now.getDate() - dayOfWeek);
+      // Get all dates for this week (Mon-Sun)
+      const weekDates = Array.from({ length: 7 }, (_, i) => {
+        const d = new Date(monday);
+        d.setDate(monday.getDate() + i);
+        return d.toISOString().slice(0, 10);
+      });
+      return weekDates.filter(date => activityData[date]).length;
+    }
+    return 0;
   }
 
   // Fetch activity keys with records from Supabase for the user
@@ -845,6 +904,7 @@ When the menu is open, hide the gear button. */}
           onChange={e => {
             const selected = filteredActivities.find(a => a.key === e.target.value);
             setActivity(selected);
+            setView('Month'); // Also switch to Month view on dropdown change
           }}
           style={{ fontSize: '1.1em', padding: '0.3em 1em', borderRadius: 8 }}
         >
@@ -974,13 +1034,13 @@ When the menu is open, hide the gear button. */}
               <div className="banana-chart-footer">
                 <span>
                   {view === 'Year' && (
-                    <>{activityCount} {activityCount === 1 ? 'log' : 'logs'} this year</>
+                    <>{getActivityCountForView('Year', activityData)} {getActivityCountForView('Year', activityData) === 1 ? 'log' : 'logs'} this year</>
                   )}
                   {view === 'Month' && (
-                    <>{activityCount} {activityCount === 1 ? 'log' : 'logs'} this month</>
+                    <>{getActivityCountForView('Month', activityData)} {getActivityCountForView('Month', activityData) === 1 ? 'log' : 'logs'} this month</>
                   )}
                   {view === 'Week' && (
-                    <>{activityCount} {activityCount === 1 ? 'log' : 'logs'} this week</>
+                    <>{getActivityCountForView('Week', activityData)} {getActivityCountForView('Week', activityData) === 1 ? 'log' : 'logs'} this week</>
                   )}
                 </span>
               </div>
