@@ -441,7 +441,7 @@ function App() {
   };
 
   // Delete an activity and its data
-  const handleDeleteActivity = async (key) => {
+  const handleDeleteActivity = (key) => {
     if (!window.confirm('Delete this activity and all its data?')) return;
     setActivities(activities.filter(a => a.key !== key));
     localStorage.removeItem(`${key}Data`);
@@ -449,13 +449,6 @@ function App() {
     if (activity.key === key) {
       const next = activities.find(a => a.key !== key) || activities[0];
       setActivity(next);
-    }
-    if (user) {
-      await supabase
-        .from('user_activity')
-        .delete()
-        .eq('user_id', user.id)
-        .eq('key', key);
     }
   };
 
