@@ -310,7 +310,16 @@ function App() {
 
   // Insert default user activities for first login
   async function insertDefaultUserActivities(user) {
-    const rows = DEFAULT_ACTIVITY_KEYS.map(key => ({ user_id: user.id, activity_key: key }));
+    const rows = DEFAULT_ACTIVITY_KEYS.map(key => {
+      const activity = activities.find(a => a.key === key);
+      return {
+        user_id: user.id,
+        key,
+        label: activity ? activity.label : key,
+        emoji: activity ? activity.emoji : '✨',
+        type: activity ? activity.type : 'do'
+      };
+    });
     await supabase.from('user_activity').insert(rows);
   }
 
