@@ -732,13 +732,13 @@ function App() {
 When the menu is open, hide the gear button. */}
       {!showManage && (
         <>
-          <div style={{ position: 'fixed', top: 24, left: 24, zIndex: 1100 }}>
+          <div style={{ position: 'fixed', top: 24, left: 24, zIndex: 2000 }}>
             <button
               title="User Profile"
               style={{
-                background: user ? '#e0e7ff' : 'none', // subtle blue highlight if logged in
-                border: user ? '2px solid #6366f1' : 'none', // blue border if logged in
-                marginLeft: user ? '-1px' : '0', // shift border 1px left if logged in
+                background: user ? '#e0ffe0' : 'none', // subtle green highlight if logged in
+                border: user ? '2px solid #22c55e' : '2px solid #ef4444', // green if logged in, red if not
+                marginLeft: '-1px',
                 width: 40,
                 height: 40,
                 color: '#888',
@@ -752,7 +752,7 @@ When the menu is open, hide the gear button. */}
                 padding: 0,
                 margin: 0,
                 lineHeight: 1,
-                boxShadow: user ? '0 0 8px #6366f155' : 'none', // subtle glow if logged in
+                boxShadow: user ? '0 0 8px #22c55e55' : '0 0 8px #ef444455', // subtle green/red glow
               }}
               onClick={() => setShowLogin(true)}
               onMouseOver={e => (e.currentTarget.style.opacity = 1)}
@@ -764,7 +764,7 @@ When the menu is open, hide the gear button. */}
               </span>
             </button>
           </div>
-          <div style={{ position: 'fixed', top: 24, right: 24, zIndex: 1100 }}>
+          <div style={{ position: 'fixed', top: 24, right: 24, zIndex: 2000 }}>
             <button
               onClick={() => setShowManage(true)}
               title="Manage Activities"
