@@ -8,7 +8,7 @@ const SUPABASE_URL = 'https://ifgyccxvapcjbrxcfjvr.supabase.co';
 const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImlmZ3ljY3h2YXBjamJyeGNmanZyIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTI1NjMwNjIsImV4cCI6MjA2ODEzOTA2Mn0.JyH702xYjyIJ70LCdH7ieO3nJnGojaTejQ2DEMGMKLA';
 const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
-const DEFAULT_ACTIVITY_KEYS = ['run', 'code', 'workout', 'quit_smoking'];
+const DEFAULT_ACTIVITY_KEYS = ['walk', 'run', 'code', 'read', 'workout'];
 
 const today = new Date();
 
