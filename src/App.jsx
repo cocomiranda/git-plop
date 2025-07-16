@@ -648,6 +648,16 @@ function App() {
     // eslint-disable-next-line
   }, [user, activities]);
 
+  // Add a function to refresh activities from Supabase and update state
+  async function refreshUserActivities(userId) {
+    const data = await fetchUserActivities(userId);
+    setActivities(data);
+    setFilteredActivities(data);
+    if (data.length > 0) {
+      setActivity(data[0]);
+    }
+  }
+
   // Define default activities for new users
   const DEFAULT_ACTIVITIES = [
     { key: 'water', label: 'Water', emoji: '💧', type: 'drink' },
@@ -660,7 +670,7 @@ function App() {
     { key: 'camp', label: 'Camp', emoji: '⛺', type: 'do' }
   ];
 
-  // In the useEffect that runs when user changes, ensure default activities exist for new users
+  // In the useEffect that runs when user changes, ensure default activities exist for new users and always fetch activities from Supabase
   useEffect(() => {
     async function ensureDefaultActivities() {
       if (user) {
@@ -675,6 +685,11 @@ function App() {
             ...a
           }));
           await supabase.from('user_activities').insert(activitiesToInsert);
+          // Now fetch and update state
+          await refreshUserActivities(user.id);
+        } else {
+          // If user already has activities, fetch and update state
+          await refreshUserActivities(user.id);
         }
       }
     }
