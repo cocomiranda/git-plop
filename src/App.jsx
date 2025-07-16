@@ -10,24 +10,6 @@ const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
 const today = new Date();
 
-// Define default activities at the top of the file
-const DEFAULT_ACTIVITIES = [
-  { key: 'water', label: 'Water', emoji: '💧', type: 'drink' },
-  { key: 'walk', label: 'Walk', emoji: '🚶', type: 'do' },
-  { key: 'vegetables', label: 'Vegetables', emoji: '🥦🥕🥒', type: 'eat' },
-  { key: 'run', label: 'Run', emoji: '🏃', type: 'do' },
-  { key: 'read', label: 'Read', emoji: '📚', type: 'do' },
-  { key: 'yoga', label: 'Yoga', emoji: '🧘‍♂️', type: 'do' },
-  { key: 'study', label: 'Study', emoji: '📖', type: 'do' },
-  { key: 'workout', label: 'Workout', emoji: '🏋️', type: 'do' },
-  { key: 'code', label: 'Code', emoji: '🧑‍💻', type: 'do', reference: 'vibe coders' },
-  { key: 'quit_smoking', label: 'Quit Smoking', emoji: '🚭', type: 'quit' },
-  { key: 'quit_alcohol', label: 'Quit Alcohol', emoji: '🚫🍺', type: 'quit' },
-  { key: 'poop', label: 'Poop', emoji: '💩', type: 'do' },
-  { key: 'shower', label: 'Shower', emoji: '🚿', type: 'do' },
-  { key: 'fruits', label: 'Fruits', emoji: '🍌🍎🍊', type: 'eat' },
-];
-
 function getStoredActivities() {
   const stored = localStorage.getItem('activities');
   if (stored) return JSON.parse(stored);
@@ -283,42 +265,6 @@ function App() {
   const [showLogin, setShowLogin] = useState(false);
   const [user, setUser] = useState(null);
   const [showWelcome, setShowWelcome] = useState(false);
-  const [activityKeysWithData, setActivityKeysWithData] = useState([]);
-
-  // Fetch activity keys with at least one record for the user
-  useEffect(() => {
-    async function fetchActivityKeysWithData() {
-      if (user) {
-        // Supabase: get distinct activity_key for this user
-        const { data, error } = await supabase
-          .from('activity_data')
-          .select('activity_key', { distinct: true })
-          .eq('user_id', user.id);
-        if (!error && data) {
-          setActivityKeysWithData([...new Set(data.map(row => row.activity_key))]);
-        }
-      } else {
-        // Local: check which activities have any data
-        const all = getStoredActivities();
-        const keys = all.filter(a => {
-          const d = getActivityData(a.key);
-          return Object.values(d).some(Boolean);
-        }).map(a => a.key);
-        setActivityKeysWithData(keys);
-      }
-    }
-    fetchActivityKeysWithData();
-  }, [user, activities]);
-
-  // Filter activities to only those with data
-  const filteredActivities = activities.filter(a => activityKeysWithData.includes(a.key));
-
-  // When filteredActivities changes, ensure selected activity is valid
-  useEffect(() => {
-    if (!filteredActivities.find(a => a.key === activity.key) && filteredActivities.length > 0) {
-      setActivity(filteredActivities[0]);
-    }
-  }, [filteredActivities]);
 
   // Update activities in localStorage whenever they change
   useEffect(() => {
@@ -397,37 +343,6 @@ function App() {
       return () => clearTimeout(t);
     }
   }, [showWelcome]);
-
-  // On login, if user has no activities in user_activity, add default activities to dropdown and push to Supabase
-  useEffect(() => {
-    async function ensureDefaultActivitiesForUser() {
-      if (user) {
-        const { data, error } = await supabase
-          .from('user_activity')
-          .select('key, label, emoji, type')
-          .eq('user_id', user.id);
-        if (!error && data && data.length === 0) {
-          // No activities for user: push defaults to Supabase
-          const activitiesToInsert = DEFAULT_ACTIVITIES.map(a => ({
-            user_id: user.id,
-            ...a
-          }));
-          await supabase.from('user_activity').insert(activitiesToInsert);
-          // Set dropdown to default activities
-          setActivities(DEFAULT_ACTIVITIES);
-          setFilteredActivities(DEFAULT_ACTIVITIES);
-          setActivity(DEFAULT_ACTIVITIES[0]);
-        } else if (!error && data && data.length > 0) {
-          // Use activities from Supabase
-          setActivities(data);
-          setFilteredActivities(data);
-          setActivity(data[0]);
-        }
-      }
-    }
-    ensureDefaultActivitiesForUser();
-    // eslint-disable-next-line
-  }, [user]);
 
   // Update handleActivity to use new saveActivityData
   const handleActivity = async () => {
@@ -761,7 +676,7 @@ When the menu is open, hide the gear button. */}
             {addError && <div className="banana-popup already" style={{ marginTop: 4 }}>{addError}</div>}
             {/* List activities with delete buttons */}
             <div className="activity-list" style={{ display: 'flex', flexDirection: 'column', gap: 6, marginTop: 8, justifyContent: 'center' }}>
-              {filteredActivities.map(a => (
+              {activities.map(a => (
                 <div key={a.key} className="activity-item" style={{
                   display: 'flex',
                   alignItems: 'center',
@@ -795,7 +710,7 @@ When the menu is open, hide the gear button. */}
                     }}
                     title="Delete activity"
                     onClick={() => handleDeleteActivity(a.key)}
-                    disabled={filteredActivities.length === 1}
+                    disabled={activities.length === 1}
                   >
                     ×
                   </button>
@@ -892,12 +807,12 @@ When the menu is open, hide the gear button. */}
         <select
           value={activity.key}
           onChange={e => {
-            const selected = filteredActivities.find(a => a.key === e.target.value);
+            const selected = activities.find(a => a.key === e.target.value);
             setActivity(selected);
           }}
           style={{ fontSize: '1.1em', padding: '0.3em 1em', borderRadius: 8 }}
         >
-          {filteredActivities.map(a => (
+          {activities.map(a => (
             <option key={a.key} value={a.key}>
               {a.emoji} {a.label}
             </option>
