@@ -657,11 +657,11 @@ function App() {
   // Add a function to refresh activities from Supabase and update state
   async function refreshUserActivities(userId) {
     const data = await fetchUserActivities(userId);
-    // Map activity_key to key for compatibility
-    const mapped = data.map(a => ({
+    // Map activity_key to key for compatibility and filter out any without a key
+    const mapped = (data || []).map(a => ({
       ...a,
       key: a.activity_key || a.key
-    }));
+    })).filter(a => a.key);
     setActivities(mapped);
     setFilteredActivities(mapped);
     if (mapped.length > 0) {
@@ -958,17 +958,19 @@ When the menu is open, hide the gear button. */}
         </div>
       )}
       {/* Activity select dropdown */}
+      {/* Add a console.log for debugging before rendering the dropdown */}
+      {console.log('filteredActivities:', filteredActivities)}
       <div style={{ display: 'flex', justifyContent: 'center', marginTop: '1.5em', marginBottom: '1em' }}>
         <select
-          value={activity.key}
+          value={activity?.key || ''}
           onChange={e => {
-            const selected = filteredActivities.find(a => a.key === e.target.value);
+            const selected = filteredActivities.find(a => a && a.key === e.target.value);
             setActivity(selected);
             setView('Month'); // Also switch to Month view on dropdown change
           }}
           style={{ fontSize: '1.1em', padding: '0.3em 1em', borderRadius: 8 }}
         >
-          {filteredActivities.map(a => (
+          {filteredActivities.filter(a => a && a.key).map(a => (
             <option key={a.key} value={a.key}>
               {a.emoji} {a.label}
             </option>
