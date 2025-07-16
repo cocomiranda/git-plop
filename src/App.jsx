@@ -407,7 +407,7 @@ function App() {
   }, [popup]);
 
   // Add a new activity
-  const handleAddActivity = (e) => {
+  const handleAddActivity = async (e) => {
     e.preventDefault();
     setAddError('');
     const label = newLabel.trim();
@@ -422,12 +422,18 @@ function App() {
       setAddError('Activity with this label already exists.');
       return;
     }
-    const newActivity = { key, label, emoji, type: 'do' };
+    const newActivity = { key, label, emoji, type: 'do', activity_key: key };
     setActivities([...activities, newActivity]);
     setNewLabel('');
     setNewEmoji('');
     setShowManage(false);
     setActivity(newActivity);
+    // Add to Supabase if logged in
+    if (user) {
+      await addUserActivity(user.id, newActivity);
+      // Refresh activities from Supabase to ensure consistency
+      await refreshUserActivities(user.id);
+    }
   };
 
   // Delete an activity and its data
@@ -651,10 +657,15 @@ function App() {
   // Add a function to refresh activities from Supabase and update state
   async function refreshUserActivities(userId) {
     const data = await fetchUserActivities(userId);
-    setActivities(data);
-    setFilteredActivities(data);
-    if (data.length > 0) {
-      setActivity(data[0]);
+    // Map activity_key to key for compatibility
+    const mapped = data.map(a => ({
+      ...a,
+      key: a.activity_key || a.key
+    }));
+    setActivities(mapped);
+    setFilteredActivities(mapped);
+    if (mapped.length > 0) {
+      setActivity(mapped[0]);
     }
   }
 
@@ -682,7 +693,8 @@ function App() {
           // User has no activities, insert defaults
           const activitiesToInsert = DEFAULT_ACTIVITIES.map(a => ({
             user_id: user.id,
-            ...a
+            ...a,
+            activity_key: a.key
           }));
           await supabase.from('user_activities').insert(activitiesToInsert);
           // Now fetch and update state
