@@ -350,7 +350,7 @@ function App() {
       if (user) {
         // Check if user has activities in Supabase
         const { data, error } = await supabase
-          .from('user_activities')
+          .from('user_activity') // <-- use this table name
           .select('key')
           .eq('user_id', user.id);
         if (!error && data && data.length === 0) {
@@ -359,7 +359,7 @@ function App() {
             user_id: user.id,
             ...a
           }));
-          await supabase.from('user_activities').insert(activitiesToInsert);
+          await supabase.from('user_activity').insert(activitiesToInsert);
         }
       }
     }
