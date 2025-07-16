@@ -244,6 +244,7 @@ function getActivityQuestion(label) {
 
 function App() {
   const [activities, setActivities] = useState(getStoredActivities());
+  const [filteredActivities, setFilteredActivities] = useState(getStoredActivities());
   const [activity, setActivity] = useState(() => {
     const stored = localStorage.getItem('selectedActivity');
     if (stored) {
@@ -265,42 +266,6 @@ function App() {
   const [showLogin, setShowLogin] = useState(false);
   const [user, setUser] = useState(null);
   const [showWelcome, setShowWelcome] = useState(false);
-  const [activityKeysWithData, setActivityKeysWithData] = useState([]);
-
-  // Fetch activity keys with at least one record for the user
-  useEffect(() => {
-    async function fetchActivityKeysWithData() {
-      if (user) {
-        // Supabase: get distinct activity_key for this user
-        const { data, error } = await supabase
-          .from('activity_data')
-          .select('activity_key', { distinct: true })
-          .eq('user_id', user.id);
-        if (!error && data) {
-          setActivityKeysWithData([...new Set(data.map(row => row.activity_key))]);
-        }
-      } else {
-        // Local: check which activities have any data
-        const all = getStoredActivities();
-        const keys = all.filter(a => {
-          const d = getActivityData(a.key);
-          return Object.values(d).some(Boolean);
-        }).map(a => a.key);
-        setActivityKeysWithData(keys);
-      }
-    }
-    fetchActivityKeysWithData();
-  }, [user, activities]);
-
-  // Filter activities to only those with data
-  const filteredActivities = activities.filter(a => activityKeysWithData.includes(a.key));
-
-  // When filteredActivities changes, ensure selected activity is valid
-  useEffect(() => {
-    if (!filteredActivities.find(a => a.key === activity.key) && filteredActivities.length > 0) {
-      setActivity(filteredActivities[0]);
-    }
-  }, [filteredActivities]);
 
   // Update activities in localStorage whenever they change
   useEffect(() => {
@@ -589,6 +554,36 @@ function App() {
     return l + 'ing';
   }
 
+  // Fetch activity keys with records from Supabase for the user
+  useEffect(() => {
+    async function fetchUserActivityKeys() {
+      if (user) {
+        const { data, error } = await supabase
+          .from('activity_data')
+          .select('activity_key')
+          .eq('user_id', user.id)
+          .neq('value', false);
+        if (!error && data) {
+          const uniqueKeys = [...new Set(data.map(row => row.activity_key))];
+          // Filter the master activities list to only those with records
+          const filtered = activities.filter(a => uniqueKeys.includes(a.key));
+          setFilteredActivities(filtered);
+          // If the current selected activity is not in filtered, switch to first
+          if (!filtered.find(a => a.key === activity.key) && filtered.length > 0) {
+            setActivity(filtered[0]);
+          }
+        } else {
+          setFilteredActivities([]);
+        }
+      } else {
+        // Not logged in: show all activities
+        setFilteredActivities(activities);
+      }
+    }
+    fetchUserActivityKeys();
+    // eslint-disable-next-line
+  }, [user, activities]);
+
   return (
     <>
       <Analytics />
@@ -712,7 +707,7 @@ When the menu is open, hide the gear button. */}
             {addError && <div className="banana-popup already" style={{ marginTop: 4 }}>{addError}</div>}
             {/* List activities with delete buttons */}
             <div className="activity-list" style={{ display: 'flex', flexDirection: 'column', gap: 6, marginTop: 8, justifyContent: 'center' }}>
-              {filteredActivities.map(a => (
+              {activities.map(a => (
                 <div key={a.key} className="activity-item" style={{
                   display: 'flex',
                   alignItems: 'center',
@@ -746,7 +741,7 @@ When the menu is open, hide the gear button. */}
                     }}
                     title="Delete activity"
                     onClick={() => handleDeleteActivity(a.key)}
-                    disabled={filteredActivities.length === 1}
+                    disabled={activities.length === 1}
                   >
                     ×
                   </button>
