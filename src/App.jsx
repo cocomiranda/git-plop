@@ -265,6 +265,42 @@ function App() {
   const [showLogin, setShowLogin] = useState(false);
   const [user, setUser] = useState(null);
   const [showWelcome, setShowWelcome] = useState(false);
+  const [activityKeysWithData, setActivityKeysWithData] = useState([]);
+
+  // Fetch activity keys with at least one record for the user
+  useEffect(() => {
+    async function fetchActivityKeysWithData() {
+      if (user) {
+        // Supabase: get distinct activity_key for this user
+        const { data, error } = await supabase
+          .from('activity_data')
+          .select('activity_key', { distinct: true })
+          .eq('user_id', user.id);
+        if (!error && data) {
+          setActivityKeysWithData([...new Set(data.map(row => row.activity_key))]);
+        }
+      } else {
+        // Local: check which activities have any data
+        const all = getStoredActivities();
+        const keys = all.filter(a => {
+          const d = getActivityData(a.key);
+          return Object.values(d).some(Boolean);
+        }).map(a => a.key);
+        setActivityKeysWithData(keys);
+      }
+    }
+    fetchActivityKeysWithData();
+  }, [user, activities]);
+
+  // Filter activities to only those with data
+  const filteredActivities = activities.filter(a => activityKeysWithData.includes(a.key));
+
+  // When filteredActivities changes, ensure selected activity is valid
+  useEffect(() => {
+    if (!filteredActivities.find(a => a.key === activity.key) && filteredActivities.length > 0) {
+      setActivity(filteredActivities[0]);
+    }
+  }, [filteredActivities]);
 
   // Update activities in localStorage whenever they change
   useEffect(() => {
@@ -343,29 +379,6 @@ function App() {
       return () => clearTimeout(t);
     }
   }, [showWelcome]);
-
-  // On login, push activities to Supabase if user has none
-  useEffect(() => {
-    async function syncActivitiesToSupabase() {
-      if (user) {
-        // Check if user has activities in Supabase
-        const { data, error } = await supabase
-          .from('user_activity') // <-- use this table name
-          .select('key')
-          .eq('user_id', user.id);
-        if (!error && data && data.length === 0) {
-          // Push all local activities to Supabase
-          const activitiesToInsert = activities.map(a => ({
-            user_id: user.id,
-            ...a
-          }));
-          await supabase.from('user_activity').insert(activitiesToInsert);
-        }
-      }
-    }
-    syncActivitiesToSupabase();
-    // eslint-disable-next-line
-  }, [user]);
 
   // Update handleActivity to use new saveActivityData
   const handleActivity = async () => {
@@ -699,7 +712,7 @@ When the menu is open, hide the gear button. */}
             {addError && <div className="banana-popup already" style={{ marginTop: 4 }}>{addError}</div>}
             {/* List activities with delete buttons */}
             <div className="activity-list" style={{ display: 'flex', flexDirection: 'column', gap: 6, marginTop: 8, justifyContent: 'center' }}>
-              {activities.map(a => (
+              {filteredActivities.map(a => (
                 <div key={a.key} className="activity-item" style={{
                   display: 'flex',
                   alignItems: 'center',
@@ -733,7 +746,7 @@ When the menu is open, hide the gear button. */}
                     }}
                     title="Delete activity"
                     onClick={() => handleDeleteActivity(a.key)}
-                    disabled={activities.length === 1}
+                    disabled={filteredActivities.length === 1}
                   >
                     ×
                   </button>
@@ -830,12 +843,12 @@ When the menu is open, hide the gear button. */}
         <select
           value={activity.key}
           onChange={e => {
-            const selected = activities.find(a => a.key === e.target.value);
+            const selected = filteredActivities.find(a => a.key === e.target.value);
             setActivity(selected);
           }}
           style={{ fontSize: '1.1em', padding: '0.3em 1em', borderRadius: 8 }}
         >
-          {activities.map(a => (
+          {filteredActivities.map(a => (
             <option key={a.key} value={a.key}>
               {a.emoji} {a.label}
             </option>
