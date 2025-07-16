@@ -17,18 +17,23 @@ function getStoredActivities() {
   return [
     { key: 'water', label: 'Water', emoji: '💧', type: 'drink' },
     { key: 'walk', label: 'Walk', emoji: '🚶', type: 'do' },
-    { key: 'vegetables', label: 'Vegetables', emoji: '🥦🥕🥒', type: 'eat' },
+    { key: 'vegetables', label: 'Vegetables', emoji: '🥦', type: 'eat' },
     { key: 'run', label: 'Run', emoji: '🏃', type: 'do' },
     { key: 'read', label: 'Read', emoji: '📚', type: 'do' },
     { key: 'yoga', label: 'Yoga', emoji: '🧘‍♂️', type: 'do' },
     { key: 'study', label: 'Study', emoji: '📖', type: 'do' },
     { key: 'workout', label: 'Workout', emoji: '🏋️', type: 'do' },
-    { key: 'code', label: 'Code', emoji: '🧑‍💻', type: 'do', reference: 'vibe coders' },
-    { key: 'quit_smoking', label: 'Quit Smoking', emoji: '🚭', type: 'quit' },
-    { key: 'quit_alcohol', label: 'Quit Alcohol', emoji: '🚫🍺', type: 'quit' },
+    { key: 'code', label: 'Code', emoji: '🧑‍💻', type: 'do' },
     { key: 'poop', label: 'Poop', emoji: '💩', type: 'do' },
     { key: 'shower', label: 'Shower', emoji: '🚿', type: 'do' },
-    { key: 'fruits', label: 'Fruits', emoji: '🍌🍎🍊', type: 'eat' },
+    { key: 'fruits', label: 'Fruits', emoji: '🍌', type: 'eat' },
+    { key: 'no_social_media', label: 'No Social Media', emoji: '🚫📱', type: 'quit' },
+    { key: 'save_money', label: 'Save Money', emoji: '💰', type: 'do' },
+    { key: 'write', label: 'Write', emoji: '✍️', type: 'do' },
+    { key: 'medicine', label: 'Medicine', emoji: '💊', type: 'do' },
+    { key: 'sleep', label: 'Sleep', emoji: '😴', type: 'do' },
+    { key: 'alcohol', label: 'No Alcohol', emoji: '🚫🍺', type: 'quit' },
+    { key: 'smoking', label: 'No Smoking', emoji: '🚫🚬', type: 'quit' },
   ];
 }
 
@@ -244,6 +249,7 @@ function getActivityQuestion(label) {
 
 function App() {
   const [activities, setActivities] = useState(getStoredActivities());
+  const [filteredActivities, setFilteredActivities] = useState(getStoredActivities());
   const [activity, setActivity] = useState(() => {
     const stored = localStorage.getItem('selectedActivity');
     if (stored) {
@@ -317,6 +323,7 @@ function App() {
   useEffect(() => {
     loadActivityData(activity.key);
     setAnimating(true);
+    setView('Month'); // Always switch to Month view when activity changes
     const t = setTimeout(() => setAnimating(false), 350);
     return () => clearTimeout(t);
   }, [activity, user]);
@@ -523,8 +530,21 @@ function App() {
     }
   };
 
-  const months = getYearCalendarData();
-  const activityCount = Object.keys(activityData).filter(date => date.startsWith(today.getFullYear())).length;
+  // Helper to get all visible dates in the current month grid
+  function getVisibleMonthDates() {
+    return getMonthCalendarData().flat().filter(Boolean).map(formatDate);
+  }
+
+  // Calculate activityCount for each view
+  const visibleMonthDates = getVisibleMonthDates();
+  const activityCount =
+    view === 'Year'
+      ? Object.keys(activityData).filter(date => date.startsWith(today.getFullYear())).length
+      : view === 'Month'
+      ? visibleMonthDates.filter(date => activityData[date]).length
+      : view === 'Week'
+      ? getWeekCalendarData().filter(date => date && activityData[formatDate(date)]).length
+      : 0;
   const monthNames = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
 
   // Helper to convert activity label to 'ing' form for streak message
@@ -552,6 +572,71 @@ function App() {
     // Fallback: just add 'ing'
     return l + 'ing';
   }
+
+  // Fetch activity keys with records from Supabase for the user
+  useEffect(() => {
+    async function fetchUserActivityKeys() {
+      if (user) {
+        const { data, error } = await supabase
+          .from('activity_data')
+          .select('activity_key')
+          .eq('user_id', user.id)
+          .neq('value', false);
+        if (!error && data) {
+          const uniqueKeys = [...new Set(data.map(row => row.activity_key))];
+          // For each key, try to find in activities, otherwise create a generic one
+          const filtered = uniqueKeys.map(key => {
+            const found = activities.find(a => a.key === key);
+            if (found) return found;
+            // Fallback: generic label and emoji
+            return { key, label: key.charAt(0).toUpperCase() + key.slice(1), emoji: '✨', type: 'do' };
+          });
+          setFilteredActivities(filtered);
+          // If the current selected activity is not in filtered, switch to first
+          if (!filtered.find(a => a.key === activity.key) && filtered.length > 0) {
+            setActivity(filtered[0]);
+          }
+        } else {
+          setFilteredActivities([]);
+        }
+      } else {
+        // Not logged in: show all activities
+        setFilteredActivities(activities);
+      }
+    }
+    fetchUserActivityKeys();
+    // eslint-disable-next-line
+  }, [user, activities]);
+
+  // Add this effect to create default activities for new users in Supabase
+  useEffect(() => {
+    async function ensureUserActivities() {
+      if (user) {
+        // Check if user has any activities in user_activity table
+        const { data, error } = await supabase
+          .from('user_activity')
+          .select('key')
+          .eq('user_id', user.id);
+        if (!error && data && data.length === 0) {
+          // No activities for this user, so insert all defaults
+          const defaultActivities = getStoredActivities().map(a => ({
+            user_id: user.id,
+            key: a.key,
+            label: a.label,
+            emoji: a.emoji,
+            type: a.type
+          }));
+          await supabase.from('user_activity').insert(defaultActivities);
+          // Optionally, update local state to reflect these activities
+          setActivities(getStoredActivities());
+        } else if (!error && data && data.length > 0) {
+          // If user already has activities, you could load them here if you want to sync
+        }
+      }
+    }
+    ensureUserActivities();
+    // eslint-disable-next-line
+  }, [user]);
 
   return (
     <>
@@ -807,12 +892,12 @@ When the menu is open, hide the gear button. */}
         <select
           value={activity.key}
           onChange={e => {
-            const selected = activities.find(a => a.key === e.target.value);
+            const selected = filteredActivities.find(a => a.key === e.target.value);
             setActivity(selected);
           }}
           style={{ fontSize: '1.1em', padding: '0.3em 1em', borderRadius: 8 }}
         >
-          {activities.map(a => (
+          {filteredActivities.map(a => (
             <option key={a.key} value={a.key}>
               {a.emoji} {a.label}
             </option>
