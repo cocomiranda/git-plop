@@ -249,12 +249,10 @@ function getActivityQuestion(label) {
 
 function App() {
   const [activities, setActivities] = useState(getStoredActivities());
-  const [filteredActivities, setFilteredActivities] = useState(getStoredActivities());
   const [activity, setActivity] = useState(() => {
     const stored = localStorage.getItem('selectedActivity');
     if (stored) {
       const selected = JSON.parse(stored);
-      // If the selected activity is not in the list, fallback to first
       return getStoredActivities().find(a => a.key === selected.key) || getStoredActivities()[0];
     }
     return getStoredActivities()[0];
@@ -382,8 +380,8 @@ function App() {
     }
   }, [popup]);
 
-  // Add a new activity
-  const handleAddActivity = (e) => {
+  // Add a new activity (syncs with Supabase if logged in)
+  const handleAddActivity = async (e) => {
     e.preventDefault();
     setAddError('');
     const label = newLabel.trim();
@@ -392,29 +390,72 @@ function App() {
       setAddError('Please enter a label.');
       return;
     }
-    // Generate a unique key
     const key = label.toLowerCase().replace(/\s+/g, '_');
     if (activities.some(a => a.key === key)) {
       setAddError('Activity with this label already exists.');
       return;
     }
     const newActivity = { key, label, emoji, type: 'do' };
-    setActivities([...activities, newActivity]);
+    if (user) {
+      // Insert into Supabase
+      const { error } = await supabase.from('user_activity').insert({
+        user_id: user.id,
+        key,
+        label,
+        emoji,
+        type: 'do'
+      });
+      if (error) {
+        setAddError('Failed to add activity.');
+        return;
+      }
+      // Fetch updated list
+      const { data, error: fetchError } = await supabase
+        .from('user_activity')
+        .select('key, label, emoji, type')
+        .eq('user_id', user.id);
+      if (!fetchError && data) {
+        setActivities(data);
+        saveActivities(data);
+      }
+    } else {
+      setActivities([...activities, newActivity]);
+      saveActivities([...activities, newActivity]);
+    }
     setNewLabel('');
     setNewEmoji('');
     setShowManage(false);
     setActivity(newActivity);
   };
 
-  // Delete an activity and its data
-  const handleDeleteActivity = (key) => {
+  // Delete an activity (syncs with Supabase if logged in)
+  const handleDeleteActivity = async (key) => {
     if (!window.confirm('Delete this activity and all its data?')) return;
-    setActivities(activities.filter(a => a.key !== key));
-    localStorage.removeItem(`${key}Data`);
-    // If the deleted activity is selected, switch to first remaining
-    if (activity.key === key) {
-      const next = activities.find(a => a.key !== key) || activities[0];
-      setActivity(next);
+    if (user) {
+      // Delete from Supabase
+      await supabase.from('user_activity').delete().eq('user_id', user.id).eq('key', key);
+      // Fetch updated list
+      const { data, error } = await supabase
+        .from('user_activity')
+        .select('key, label, emoji, type')
+        .eq('user_id', user.id);
+      if (!error && data) {
+        setActivities(data);
+        saveActivities(data);
+        // If the deleted activity is selected, switch to first remaining
+        if (activity.key === key) {
+          const next = data.find(a => a.key !== key) || data[0];
+          setActivity(next);
+        }
+      }
+    } else {
+      const updated = activities.filter(a => a.key !== key);
+      setActivities(updated);
+      saveActivities(updated);
+      if (activity.key === key) {
+        const next = updated[0];
+        setActivity(next);
+      }
     }
   };
 
@@ -591,17 +632,16 @@ function App() {
             // Fallback: generic label and emoji
             return { key, label: key.charAt(0).toUpperCase() + key.slice(1), emoji: '✨', type: 'do' };
           });
-          setFilteredActivities(filtered);
           // If the current selected activity is not in filtered, switch to first
           if (!filtered.find(a => a.key === activity.key) && filtered.length > 0) {
             setActivity(filtered[0]);
           }
         } else {
-          setFilteredActivities([]);
+          // setFilteredActivities([]); // This line is removed as per the edit hint
         }
       } else {
         // Not logged in: show all activities
-        setFilteredActivities(activities);
+        // setFilteredActivities(activities); // This line is removed as per the edit hint
       }
     }
     fetchUserActivityKeys();
@@ -893,12 +933,12 @@ When the menu is open, hide the gear button. */}
         <select
           value={activity.key}
           onChange={e => {
-            const selected = filteredActivities.find(a => a.key === e.target.value);
+            const selected = activities.find(a => a.key === e.target.value);
             setActivity(selected);
           }}
           style={{ fontSize: '1.1em', padding: '0.3em 1em', borderRadius: 8 }}
         >
-          {filteredActivities.map(a => (
+          {activities.map(a => (
             <option key={a.key} value={a.key}>
               {a.emoji} {a.label}
             </option>
