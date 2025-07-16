@@ -244,7 +244,6 @@ function getActivityQuestion(label) {
 
 function App() {
   const [activities, setActivities] = useState(getStoredActivities());
-  const [filteredActivities, setFilteredActivities] = useState(getStoredActivities());
   const [activity, setActivity] = useState(() => {
     const stored = localStorage.getItem('selectedActivity');
     if (stored) {
@@ -318,7 +317,6 @@ function App() {
   useEffect(() => {
     loadActivityData(activity.key);
     setAnimating(true);
-    setView('Month'); // Always switch to Month view on activity change
     const t = setTimeout(() => setAnimating(false), 350);
     return () => clearTimeout(t);
   }, [activity, user]);
@@ -554,70 +552,6 @@ function App() {
     // Fallback: just add 'ing'
     return l + 'ing';
   }
-
-  // Helper to get log count for the current view
-  function getActivityCountForView(view, activityData) {
-    const today = new Date();
-    if (view === 'Year') {
-      const yearStr = today.getFullYear().toString();
-      return Object.keys(activityData).filter(date => date.startsWith(yearStr) && activityData[date]).length;
-    }
-    if (view === 'Month') {
-      const year = today.getFullYear();
-      const month = String(today.getMonth() + 1).padStart(2, '0');
-      return Object.keys(activityData).filter(date => date.startsWith(`${year}-${month}`) && activityData[date]).length;
-    }
-    if (view === 'Week') {
-      // Get Monday of this week
-      const now = new Date();
-      const dayOfWeek = now.getDay() === 0 ? 6 : now.getDay() - 1;
-      const monday = new Date(now);
-      monday.setDate(now.getDate() - dayOfWeek);
-      // Get all dates for this week (Mon-Sun)
-      const weekDates = Array.from({ length: 7 }, (_, i) => {
-        const d = new Date(monday);
-        d.setDate(monday.getDate() + i);
-        return d.toISOString().slice(0, 10);
-      });
-      return weekDates.filter(date => activityData[date]).length;
-    }
-    return 0;
-  }
-
-  // Fetch activity keys with records from Supabase for the user
-  useEffect(() => {
-    async function fetchUserActivityKeys() {
-      if (user) {
-        const { data, error } = await supabase
-          .from('activity_data')
-          .select('activity_key')
-          .eq('user_id', user.id)
-          .neq('value', false);
-        if (!error && data) {
-          const uniqueKeys = [...new Set(data.map(row => row.activity_key))];
-          // For each key, try to find in activities, otherwise create a generic one
-          const filtered = uniqueKeys.map(key => {
-            const found = activities.find(a => a.key === key);
-            if (found) return found;
-            // Fallback: generic label and emoji
-            return { key, label: key.charAt(0).toUpperCase() + key.slice(1), emoji: '✨', type: 'do' };
-          });
-          setFilteredActivities(filtered);
-          // If the current selected activity is not in filtered, switch to first
-          if (!filtered.find(a => a.key === activity.key) && filtered.length > 0) {
-            setActivity(filtered[0]);
-          }
-        } else {
-          setFilteredActivities([]);
-        }
-      } else {
-        // Not logged in: show all activities
-        setFilteredActivities(activities);
-      }
-    }
-    fetchUserActivityKeys();
-    // eslint-disable-next-line
-  }, [user, activities]);
 
   return (
     <>
@@ -873,13 +807,12 @@ When the menu is open, hide the gear button. */}
         <select
           value={activity.key}
           onChange={e => {
-            const selected = filteredActivities.find(a => a.key === e.target.value);
+            const selected = activities.find(a => a.key === e.target.value);
             setActivity(selected);
-            setView('Month'); // Also switch to Month view on dropdown change
           }}
           style={{ fontSize: '1.1em', padding: '0.3em 1em', borderRadius: 8 }}
         >
-          {filteredActivities.map(a => (
+          {activities.map(a => (
             <option key={a.key} value={a.key}>
               {a.emoji} {a.label}
             </option>
@@ -1005,13 +938,13 @@ When the menu is open, hide the gear button. */}
               <div className="banana-chart-footer">
                 <span>
                   {view === 'Year' && (
-                    <>{getActivityCountForView('Year', activityData)} {getActivityCountForView('Year', activityData) === 1 ? 'log' : 'logs'} this year</>
+                    <>{activityCount} {activityCount === 1 ? 'log' : 'logs'} this year</>
                   )}
                   {view === 'Month' && (
-                    <>{getActivityCountForView('Month', activityData)} {getActivityCountForView('Month', activityData) === 1 ? 'log' : 'logs'} this month</>
+                    <>{activityCount} {activityCount === 1 ? 'log' : 'logs'} this month</>
                   )}
                   {view === 'Week' && (
-                    <>{getActivityCountForView('Week', activityData)} {getActivityCountForView('Week', activityData) === 1 ? 'log' : 'logs'} this week</>
+                    <>{activityCount} {activityCount === 1 ? 'log' : 'logs'} this week</>
                   )}
                 </span>
               </div>
