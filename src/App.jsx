@@ -627,9 +627,20 @@ function App() {
             type: a.type
           }));
           await supabase.from('user_activity').insert(defaultActivities);
-          // Update local state and localStorage to reflect these activities
-          setActivities(getStoredActivities());
-          saveActivities(getStoredActivities());
+
+          // Fetch the activities just inserted
+          const { data: userActs, error: fetchError } = await supabase
+            .from('user_activity')
+            .select('key, label, emoji, type')
+            .eq('user_id', user.id);
+
+          if (!fetchError && userActs) {
+            setActivities(userActs);
+            saveActivities(userActs);
+          } else {
+            setActivities(getStoredActivities());
+            saveActivities(getStoredActivities());
+          }
         } else if (!error && data && data.length > 0) {
           // If user already has activities, you could load them here if you want to sync
         }
