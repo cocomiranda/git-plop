@@ -428,6 +428,15 @@ function App() {
     setActivity(newActivity);
     if (user) {
       await insertUserActivity(user, newActivity);
+      // Fetch updated activities from Supabase
+      const userActivityKeys = await fetchUserActivities(user);
+      const filtered = userActivityKeys.map(key => {
+        const found = activities.find(a => a.key === key);
+        if (found) return found;
+        return { key, label: key.charAt(0).toUpperCase() + key.slice(1), emoji: '✨', type: 'do' };
+      });
+      setFilteredActivities(filtered);
+      setActivity(newActivity);
     }
   };
 
