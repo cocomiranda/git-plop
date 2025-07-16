@@ -648,6 +648,39 @@ function App() {
     // eslint-disable-next-line
   }, [user, activities]);
 
+  // Define default activities for new users
+  const DEFAULT_ACTIVITIES = [
+    { key: 'water', label: 'Water', emoji: '💧', type: 'drink' },
+    { key: 'walk', label: 'Walk', emoji: '🚶', type: 'do' },
+    { key: 'run', label: 'Run', emoji: '🏃', type: 'do' },
+    { key: 'workout', label: 'Workout', emoji: '🏋️', type: 'do' },
+    { key: 'code', label: 'Code', emoji: '🧑‍💻', type: 'do' },
+    { key: 'poop', label: 'Poop', emoji: '💩', type: 'do' },
+    { key: 'shower', label: 'Shower', emoji: '🚿', type: 'do' },
+    { key: 'camp', label: 'Camp', emoji: '⛺', type: 'do' }
+  ];
+
+  // In the useEffect that runs when user changes, ensure default activities exist for new users
+  useEffect(() => {
+    async function ensureDefaultActivities() {
+      if (user) {
+        const { data, error } = await supabase
+          .from('user_activities')
+          .select('activity_key')
+          .eq('user_id', user.id);
+        if (!error && data && data.length === 0) {
+          // User has no activities, insert defaults
+          const activitiesToInsert = DEFAULT_ACTIVITIES.map(a => ({
+            user_id: user.id,
+            ...a
+          }));
+          await supabase.from('user_activities').insert(activitiesToInsert);
+        }
+      }
+    }
+    ensureDefaultActivities();
+  }, [user]);
+
   return (
     <>
       <Analytics />
