@@ -748,7 +748,7 @@ When the menu is open, hide the gear button. */}
             {addError && <div className="banana-popup already" style={{ marginTop: 4 }}>{addError}</div>}
             {/* List activities with delete buttons */}
             <div className="activity-list" style={{ display: 'flex', flexDirection: 'column', gap: 6, marginTop: 8, justifyContent: 'center' }}>
-              {activities.map(a => (
+              {filteredActivities.map(a => (
                 <div key={a.key} className="activity-item" style={{
                   display: 'flex',
                   alignItems: 'center',
