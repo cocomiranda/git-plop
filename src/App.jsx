@@ -723,80 +723,71 @@ function App() {
   return (
     <>
       <Analytics />
-      <h1 className="banana-title" style={{ marginBottom: 0, marginTop: '0.5em' }}>streakio <span role="img" aria-label="flame">🔥</span></h1>
-      {/* Manage Activities Button */}
-      {/* Remove the current Manage Activities button from above the dropdown */}
-      {/* Add a floating, subtle button at the bottom right */}
-      {/* Place this just before the closing </> in the return */}
-      {/* Change the floating gear button to toggle the menu: if showManage is true, clicking the button closes it; if false, opens it.
-When the menu is open, hide the gear button. */}
+      {/* Buttons flex container above the title */}
       {!showManage && (
-        <>
-          <div style={{ position: 'fixed', top: 24, left: 24, zIndex: 2000 }}>
-            <button
-              title="User Profile"
-              style={{
-                background: user ? '#e0ffe0' : 'none', // subtle green highlight if logged in
-                border: user ? '2px solid #22c55e' : '2px solid #ef4444', // green if logged in, red if not
-                marginLeft: '-1px',
-                width: 40,
-                height: 40,
-                color: '#888',
-                fontSize: 28,
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                cursor: 'pointer',
-                opacity: 0.7,
-                transition: 'background 0.2s, border 0.2s, opacity 0.2s',
-                padding: 0,
-                margin: 0,
-                lineHeight: 1,
-                boxShadow: user ? '0 0 8px #22c55e55' : '0 0 8px #ef444455', // subtle green/red glow
-              }}
-              onClick={() => setShowLogin(true)}
-              onMouseOver={e => (e.currentTarget.style.opacity = 1)}
-              onMouseOut={e => (e.currentTarget.style.opacity = 0.7)}
-              aria-label="User Profile"
-            >
-              <span role="img" aria-label="user" style={{lineHeight: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', marginLeft: '1px'}}>
-                👤
-              </span>
-            </button>
-          </div>
-          <div style={{ position: 'fixed', top: 24, right: 24, zIndex: 2000 }}>
-            <button
-              onClick={() => setShowManage(true)}
-              title="Manage Activities"
-              style={{
-                background: 'none',
-                border: 'none',
-                width: 40,
-                height: 40,
-                color: '#888',
-                fontSize: 28,
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                cursor: 'pointer',
-                opacity: 0.7,
-                transition: 'opacity 0.2s',
-                padding: 0,
-                margin: 0,
-                lineHeight: 1,
-                boxShadow: 'none',
-              }}
-              onMouseOver={e => (e.currentTarget.style.opacity = 1)}
-              onMouseOut={e => (e.currentTarget.style.opacity = 0.7)}
-              aria-label="Manage Activities"
-            >
-              <span role="img" aria-label="settings" style={{lineHeight: 1, display: 'flex', alignItems: 'center', justifyContent: 'center'}}>
-                ⚙️
-              </span>
-            </button>
-          </div>
-        </>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', width: '100%', maxWidth: 420, margin: '0 auto', marginTop: 24, marginBottom: 8 }}>
+          <button
+            title="User Profile"
+            style={{
+              background: user ? '#e0ffe0' : 'none',
+              border: user ? '2px solid #22c55e' : '2px solid #ef4444',
+              marginLeft: '-1px',
+              width: 40,
+              height: 40,
+              color: '#888',
+              fontSize: 28,
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              cursor: 'pointer',
+              opacity: 0.7,
+              transition: 'background 0.2s, border 0.2s, opacity 0.2s',
+              padding: 0,
+              margin: 0,
+              lineHeight: 1,
+              boxShadow: user ? '0 0 8px #22c55e55' : '0 0 8px #ef444455',
+            }}
+            onClick={() => setShowLogin(true)}
+            onMouseOver={e => (e.currentTarget.style.opacity = 1)}
+            onMouseOut={e => (e.currentTarget.style.opacity = 0.7)}
+            aria-label="User Profile"
+          >
+            <span role="img" aria-label="user" style={{lineHeight: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', marginLeft: '1px'}}>
+              👤
+            </span>
+          </button>
+          <button
+            onClick={() => setShowManage(true)}
+            title="Manage Activities"
+            style={{
+              background: 'none',
+              border: 'none',
+              width: 40,
+              height: 40,
+              color: '#888',
+              fontSize: 28,
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              cursor: 'pointer',
+              opacity: 0.7,
+              transition: 'opacity 0.2s',
+              padding: 0,
+              margin: 0,
+              lineHeight: 1,
+              boxShadow: 'none',
+            }}
+            onMouseOver={e => (e.currentTarget.style.opacity = 1)}
+            onMouseOut={e => (e.currentTarget.style.opacity = 0.7)}
+            aria-label="Manage Activities"
+          >
+            <span role="img" aria-label="settings" style={{lineHeight: 1, display: 'flex', alignItems: 'center', justifyContent: 'center'}}>
+              ⚙️
+            </span>
+          </button>
+        </div>
       )}
+      <h1 className="banana-title" style={{ marginBottom: 0, marginTop: '0.5em' }}>streakio <span role="img" aria-label="flame">🔥</span></h1>
       {/* Manage Activities Modal/Panel */}
       {showManage && (
         <div className="manage-activities-modal" style={{ position: 'fixed', top: 0, left: 0, width: '100vw', height: '100vh', background: 'rgba(0,0,0,0.18)', zIndex: 1000, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
