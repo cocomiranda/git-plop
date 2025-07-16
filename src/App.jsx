@@ -565,8 +565,13 @@ function App() {
           .neq('value', false);
         if (!error && data) {
           const uniqueKeys = [...new Set(data.map(row => row.activity_key))];
-          // Filter the master activities list to only those with records
-          const filtered = activities.filter(a => uniqueKeys.includes(a.key));
+          // For each key, try to find in activities, otherwise create a generic one
+          const filtered = uniqueKeys.map(key => {
+            const found = activities.find(a => a.key === key);
+            if (found) return found;
+            // Fallback: generic label and emoji
+            return { key, label: key.charAt(0).toUpperCase() + key.slice(1), emoji: '✨', type: 'do' };
+          });
           setFilteredActivities(filtered);
           // If the current selected activity is not in filtered, switch to first
           if (!filtered.find(a => a.key === activity.key) && filtered.length > 0) {
