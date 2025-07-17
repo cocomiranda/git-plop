@@ -390,7 +390,7 @@ function App() {
       return;
     }
     const newData = { ...activityData, [date]: true };
-    await saveActivityData(activity.key, newData);
+    if (activity) await saveActivityData(activity.key, newData);
     setActivityDataState(newData);
     setPopup('success');
   };
@@ -398,7 +398,7 @@ function App() {
   // Update handleReset to use new saveActivityData
   const handleReset = async () => {
     if (user) {
-      await setActivityDataSupabase(user, activity.key, {});
+      if (activity) await setActivityDataSupabase(user, activity.key, {});
     } else {
       localStorage.removeItem(`${activity.key}Data`);
     }
@@ -1022,12 +1022,12 @@ function App() {
           ))}
         </select>
       </div>
-      <div className={`banana-app banana-dots-fade${animating ? ' animating' : ''}`} key={activity.key + '-app'}>
+      <div className={`banana-app banana-dots-fade${animating ? ' animating' : ''}`} key={activity ? activity.key + '-app' : 'no-activity-app'}>
         <div className="banana-side" style={{ marginTop: '0.5em', marginBottom: '2em' }}>
-          <div className={`banana-dots-fade${animating ? ' animating' : ''}`} key={activity.key + '-side'}>
+          <div className={`banana-dots-fade${animating ? ' animating' : ''}`} key={activity ? activity.key + '-side' : 'no-activity-side'}>
             <div className="banana-actions">
               <div className="banana-question">
-                {getActivityQuestion(activity.label)}
+                {activity ? getActivityQuestion(activity.label) : ''}
               </div>
               <button className="banana-btn small" onClick={handleActivity}>Yes</button>
             </div>
@@ -1037,7 +1037,7 @@ function App() {
         </div>
         <div className="banana-main">
           <div className="banana-chart-container">
-            <div className={`banana-dots-fade${animating ? ' animating' : ''}`} key={activity.key}>
+            <div className={`banana-dots-fade${animating ? ' animating' : ''}`} key={activity ? activity.key : 'no-activity'}>
               <ViewToggle onChange={setView} />
               {view === 'Year' && (
                 <div style={{
@@ -1154,12 +1154,12 @@ function App() {
             </div>
           </div>
           {getStreak(activityData) > 0 && (
-            <div className={`banana-dots-fade${animating ? ' animating' : ''}`} key={activity.key + '-streak'}>
+            <div className={`banana-dots-fade${animating ? ' animating' : ''}`} key={activity ? activity.key + '-streak' : 'no-activity-streak'}>
               <div className="banana-streak">
                 <>
                   <span role="img" aria-label="streak">{getFlames(getStreak(activityData))}</span>
                   <span className="banana-streak-count">{getStreak(activityData)}</span>
-                  <span>days streak of {toIng(activity.label)}</span>
+                  {activity ? <span>days streak of {toIng(activity.label)}</span> : null}
                 </>
               </div>
             </div>
