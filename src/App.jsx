@@ -587,6 +587,9 @@ function App() {
       ? getWeekCalendarData().filter(date => date && activityData[formatDate(date)]).length
       : 0;
   const monthNames = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+  
+  // Add this line to define months for the Year view
+  const months = getYearCalendarData();
 
   // Helper to convert activity label to 'ing' form for streak message
   function toIng(label) {
