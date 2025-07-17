@@ -249,15 +249,8 @@ function getActivityQuestion(label) {
 
 function App() {
   const [activities, setActivities] = useState(getStoredActivities());
-  const [activity, setActivity] = useState(() => {
-    const stored = localStorage.getItem('selectedActivity');
-    if (stored) {
-      const selected = JSON.parse(stored);
-      return getStoredActivities().find(a => a.key === selected.key) || getStoredActivities()[0];
-    }
-    return getStoredActivities()[0];
-  });
-  const [activityData, setActivityDataState] = useState(getActivityData(getSelectedActivity().key));
+  const [activity, setActivity] = useState(null); // Start as null, will set after DB/local load
+  const [activityData, setActivityDataState] = useState({});
   const [popup, setPopup] = useState(null);
   const [view, setView] = useState('Month');
   const [animating, setAnimating] = useState(false);
@@ -317,14 +310,54 @@ function App() {
     }
   }
 
-  // Update activityData when activity or user changes
+  // On user or activities change, ensure selected activity is valid and always from DB if logged in
   useEffect(() => {
-    loadActivityData(activity.key);
-    setAnimating(true);
-    setView('Month'); // Always switch to Month view when activity changes
-    const t = setTimeout(() => setAnimating(false), 350);
-    return () => clearTimeout(t);
+    if (user) {
+      // Always use DB activities
+      if (activities.length > 0) {
+        // Try to keep the same activity if possible
+        setActivity(prev => {
+          if (prev && activities.find(a => a.key === prev.key)) return activities.find(a => a.key === prev.key);
+          // If not, default to first activity from DB
+          return activities[0];
+        });
+      }
+    } else {
+      // Not logged in: use localStorage fallback
+      const stored = localStorage.getItem('selectedActivity');
+      if (stored) {
+        const selected = JSON.parse(stored);
+        setActivity(getStoredActivities().find(a => a.key === selected.key) || getStoredActivities()[0]);
+      } else {
+        setActivity(getStoredActivities()[0]);
+      }
+    }
+  }, [user, activities]);
+
+  // When activity changes, load its data (from DB if logged in, else local)
+  useEffect(() => {
+    if (activity) {
+      loadActivityData(activity.key);
+    }
   }, [activity, user]);
+
+  // When user logs in, fetch activities from DB
+  useEffect(() => {
+    async function syncUserActivities() {
+      if (user && user.id) {
+        const { data, error } = await supabase
+          .from('user_activity')
+          .select('key, label, emoji, type')
+          .eq('user_id', user.id);
+        if (!error && data && data.length > 0) {
+          setActivities(data);
+        }
+      } else {
+        setActivities(getStoredActivities());
+      }
+    }
+    syncUserActivities();
+  }, [user]);
 
   // Check for user session on mount and show welcome banner for 2 seconds after login
   useEffect(() => {
@@ -974,10 +1007,11 @@ function App() {
       {/* Activity select dropdown */}
       <div style={{ display: 'flex', justifyContent: 'center', marginTop: '1.5em', marginBottom: '1em' }}>
         <select
-          value={activity.key}
+          value={activity ? activity.key : ''}
           onChange={e => {
             const selected = activities.find(a => a.key === e.target.value);
             setActivity(selected);
+            if (!user) setSelectedActivity(selected); // Only update localStorage if not logged in
           }}
           style={{ fontSize: '1.1em', padding: '0.3em 1em', borderRadius: 8 }}
         >
